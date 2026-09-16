@@ -1,0 +1,35 @@
+{
+  "name": "nfa-fire-info-app",
+  "version": "1.0.0",
+  "description": "소방청 화재정보서비스 연동 스마트폰 모바일 웹 앱",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && npx vercel --prod",
+    "server": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "chart.js": "^4.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.395.0",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.3.1"
+  }
+}

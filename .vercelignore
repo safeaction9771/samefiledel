@@ -1,0 +1,10 @@
+*.xlsx
+*.pdf
+*.bin
+*.py
+*.cmd
+test_*
+*.db
+*.db.gz
+*.csv
+src/data/nfa_fire_database_10years.json

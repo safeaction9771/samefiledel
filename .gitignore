@@ -1,0 +1,22 @@
+node_modules
+dist
+.env
+.env.local
+.DS_Store
+*.log
+.vercel
+
+# Exclude large raw PDFs and binaries
+*.pdf
+*.xlsx
+*.csv
+*.bin
+*raw_reports.json
+*final_ingest.json
+*parsed_cases.json
+*parsed_preview.txt
+*clean.txt
+*sample_lines.txt
+*test_*.txt
+*parsed_fires.json
+src/data/fire_records.db

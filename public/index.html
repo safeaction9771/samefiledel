@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CleanSpace - 중복 파일 탐지 & 삭제 관리자</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-icon">
+          <i data-lucide="copy-check"></i>
+        </div>
+        <div class="logo-text">
+          <h1>CleanSpace</h1>
+          <span>Duplicate File Finder & Cleaner</span>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="status-indicator online"></span>
+        <span>Local Engine Ready</span>
+      </div>
+    </header>
+
+    <!-- Scan Control Card -->
+    <section class="scan-card glass-panel">
+      <div class="card-header">
+        <h2><i data-lucide="folder-search"></i> 중복 파일 스캔</h2>
+        <p>검색할 컴퓨터 폴더 경로를 입력하고 스캔을 시작하세요.</p>
+      </div>
+
+      <form id="scan-form" class="scan-form">
+        <div class="input-group full-width">
+          <label for="target-path">스캔 대상 폴더 경로</label>
+          <div class="input-with-button">
+            <div class="input-prefix"><i data-lucide="folder"></i></div>
+            <input type="text" id="target-path" placeholder="예: C:\Users\사용자명\Downloads 또는 D:\Photos" required />
+            <button type="submit" id="btn-scan" class="btn btn-primary">
+              <i data-lucide="search"></i>
+              <span>스캔 시작</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="scan-options">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="verify-content" checked>
+            <span class="checkbox-mark"></span>
+            <span class="label-text">
+              <strong>파일 내용(해시) 정밀 비교</strong>
+              <small>크기뿐만 아니라 실제 파일 내용까지 일치하는지 정밀 확인합니다.</small>
+            </span>
+          </label>
+
+          <div class="min-size-selector">
+            <label for="min-size">최소 파일 크기:</label>
+            <select id="min-size">
+              <option value="0">제한 없음 (모든 크기)</option>
+              <option value="102400" selected>100 KB 이상</option>
+              <option value="1048576">1 MB 이상</option>
+              <option value="10485760">10 MB 이상</option>
+              <option value="104857600">100 MB 이상</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <!-- Loader State -->
+      <div id="scan-loader" class="scan-loader hidden">
+        <div class="spinner-pulse"></div>
+        <p id="loader-status">폴더 재귀 탐색 및 파일 분석 중입니다...</p>
+        <span class="loader-sub">파일 수에 따라 수 초에서 수 분이 소요될 수 있습니다.</span>
+      </div>
+    </section>
+
+    <!-- Dashboard Stats Grid -->
+    <section id="stats-section" class="stats-grid hidden">
+      <div class="stat-card glass-panel">
+        <div class="stat-icon icon-blue"><i data-lucide="files"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">스캔된 총 파일</span>
+          <h3 id="stat-total-files">0</h3>
+        </div>
+      </div>
+      <div class="stat-card glass-panel">
+        <div class="stat-icon icon-purple"><i data-lucide="layers"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">중복 그룹 수</span>
+          <h3 id="stat-duplicate-groups">0</h3>
+        </div>
+      </div>
+      <div class="stat-card glass-panel">
+        <div class="stat-icon icon-amber"><i data-lucide="copy"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">중복 파일 개수</span>
+          <h3 id="stat-duplicate-files">0</h3>
+        </div>
+      </div>
+      <div class="stat-card glass-panel highlight-card">
+        <div class="stat-icon icon-emerald"><i data-lucide="hard-drive"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">확보 가능한 용량</span>
+          <h3 id="stat-wasted-size">0 B</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results-section" class="results-section hidden">
+      <!-- Toolbar Header -->
+      <div class="results-toolbar glass-panel">
+        <div class="toolbar-left">
+          <h3>검색 결과 목록</h3>
+          <span id="selected-summary" class="badge-summary">0개 선택됨 (0 B)</span>
+        </div>
+
+        <div class="toolbar-actions">
+          <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" id="btn-smart-select">
+              <i data-lucide="wand-2"></i>
+              <span>스마트 자동 선택</span>
+              <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="dropdown-menu" id="smart-select-menu">
+              <button data-action="oldest" class="dropdown-item">
+                <i data-lucide="clock"></i> 가장 오래된 파일 남기고 선택
+              </button>
+              <button data-action="newest" class="dropdown-item">
+                <i data-lucide="sparkles"></i> 가장 최근 파일 남기고 선택
+              </button>
+              <button data-action="clear" class="dropdown-item">
+                <i data-lucide="square-x"></i> 전체 선택 해제
+              </button>
+            </div>
+          </div>
+
+          <button id="btn-delete-selected" class="btn btn-danger" disabled>
+            <i data-lucide="trash-2"></i>
+            <span>선택 항목 삭제</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Groups List Container -->
+      <div id="groups-container" class="groups-container">
+        <!-- Javascript dynamic rendering -->
+      </div>
+    </section>
+
+    <!-- Empty / Initial State -->
+    <div id="empty-state" class="empty-state glass-panel">
+      <div class="empty-icon"><i data-lucide="sparkles"></i></div>
+      <h3>디스크 공간을 낭비하는 중복 파일을 찾아보세요</h3>
+      <p>상단 입력창에 스캔할 폴더 경로를 입력하고 [스캔 시작]을 클릭하세요.</p>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <div class="modal-icon danger-icon"><i data-lucide="alert-triangle"></i></div>
+        <h3>파일 영구 삭제 확인</h3>
+      </div>
+      <div class="modal-body">
+        <p>선택하신 <strong id="modal-file-count">0</strong>개의 중복 파일을 영구히 삭제하시겠습니까?</p>
+        <div class="modal-warning-box">
+          <i data-lucide="info"></i>
+          <span>삭제된 파일은 복구할 수 없으므로 원본 파일이 제대로 유지되는지 확인하세요.</span>
+        </div>
+        <div class="modal-stats">
+          <span>확보될 공간: <strong id="modal-freed-size">0 B</strong></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-btn-cancel" class="btn btn-secondary">취소</button>
+        <button id="modal-btn-confirm" class="btn btn-danger">
+          <i data-lucide="trash-2"></i>
+          <span>영구 삭제 실행</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

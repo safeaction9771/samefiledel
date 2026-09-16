@@ -1,0 +1,16 @@
+{
+  "short_name": "화재정보",
+  "name": "소방청 화재정보 실시간 스마트앱",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
