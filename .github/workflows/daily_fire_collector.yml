@@ -1,4 +1,4 @@
-﻿name: Daily Fire Data Auto Collector (06:30 KST)
+name: Daily Fire Data Auto Collector (06:30 KST)
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4 requests pypdf
+          pip install beautifulsoup4 requests pypdf pymupdf olefile
 
       - name: Run Unified Fire Daily Collector
         run: |
