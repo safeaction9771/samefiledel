@@ -4,39 +4,65 @@ import { Flame, ShieldAlert, Key, Monitor, Smartphone } from 'lucide-react';
 import { NFA_OFFICIAL_INCIDENTS_DATABASE } from '../data/officialIncidents';
 
 const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcMode, onTogglePcMode, onLogoDoubleClick, liveIncidents = [] }) => {
-  // 실시간 흐르는 속보 텍스트 생성 (날짜 및 시간 완벽 포함)
+  // 실시간 흐르는 속보 텍스트 생성 (소방청 DB 및 라이브 OpenAPI 데이터 필드 정규화)
+  const normalizeIncident = (inc) => {
+    if (!inc) return null;
+    const dtStr = inc.datetime || (inc.date && inc.time ? `${inc.date} ${inc.time}` : inc.date) || inc.occurTime || inc.occurDate || '';
+    const place = inc.location || inc.address || inc.occurPlace || inc.title || '화재 현장';
+
+    let region = inc.region;
+    if (!region && inc.location) {
+      region = inc.location.split(' ')[0].replace(/특별자치시|특별자치도|광역시|특별시|도$/, '');
+    }
+    if (!region) region = '전국';
+
+    const cause = inc.cause || inc.fireCause || '원인 조사 중';
+    const status = inc.statusText || inc.status || '완진';
+    const sortKey = (dtStr || '').replace(/[- :T\/]/g, '').padEnd(14, '0');
+
+    return {
+      id: inc.occurId || inc.id || Math.random().toString(),
+      datetime: dtStr,
+      sortKey,
+      region,
+      place,
+      cause,
+      status
+    };
+  };
+
   const dynamicTickerText = useMemo(() => {
     const items = [];
 
     // 사용자가 지도/목록에서 선택한 사건이 있다면 1순위로 즉시 노출
     if (latestIncident) {
-      items.push(
-        `🚨 [선택사건] [${latestIncident.region || '전국'}] ${latestIncident.occurPlace || latestIncident.title || '화재'} (발생일시: ${latestIncident.occurDate || latestIncident.occurTime || ''}) - ${latestIncident.statusText || '완진'} [원인: ${latestIncident.fireCause || latestIncident.cause || '조사 중'}]`
-      );
+      const normSel = normalizeIncident(latestIncident);
+      if (normSel) {
+        items.push(
+          `🚨 [선택사건] [${normSel.region}] ${normSel.place} (발생일시: ${normSel.datetime}) - ${normSel.status} [원인: ${normSel.cause}]`
+        );
+      }
     }
 
     // 실시간 OpenAPI 수신 속보 + 소방청 공식 실데이터 기록 병합
     const combined = [...liveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
     const seen = new Set();
-    const uniqueList = [];
+    const normalizedList = [];
+
     for (const inc of combined) {
-      const id = inc.occurId || inc.id;
-      if (!id || seen.has(id)) continue;
-      seen.add(id);
-      uniqueList.push(inc);
+      const norm = normalizeIncident(inc);
+      if (!norm || !norm.id || seen.has(norm.id)) continue;
+      seen.add(norm.id);
+      normalizedList.push(norm);
     }
 
-    // 최신 발생일시(occurTime / occurDate) 기준 엄격한 내림차순 정렬 (당일/최신 속보 최우선)
-    uniqueList.sort((a, b) => {
-      const timeA = (a.occurTime || a.occurDate || '').replace(/[- :]/g, '');
-      const timeB = (b.occurTime || b.occurDate || '').replace(/[- :]/g, '');
-      return timeB.localeCompare(timeA);
-    });
+    // 최신 발생일시 기준 엄격한 내림차순 정렬 (당일/최신 속보 최우선)
+    normalizedList.sort((a, b) => b.sortKey.localeCompare(a.sortKey));
 
-    const recentIncidents = uniqueList.slice(0, 20);
+    const recentIncidents = normalizedList.slice(0, 20);
     for (const inc of recentIncidents) {
       items.push(
-        `🔥 [공식속보] [${inc.region}] ${inc.occurPlace} (발생일시: ${inc.occurDate || inc.occurTime || ''}) - ${inc.statusText || '완진'} [원인: ${inc.fireCause || inc.cause || '조사 중'}]`
+        `🔥 [공식속보] [${inc.region}] ${inc.place} (발생일시: ${inc.datetime}) - ${inc.status} [원인: ${inc.cause}]`
       );
     }
 
