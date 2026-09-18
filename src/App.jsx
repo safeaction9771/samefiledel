@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Flame, BarChart3, Building2, Monitor, RefreshCw, Radio } from 'lucide-react';
+import { Map, Flame, BarChart3, Building2, Monitor, RefreshCw, Radio, Youtube } from 'lucide-react';
 import Header from './components/Header';
 import FireMap from './components/FireMap';
 import FireOccurList from './components/FireOccurList';
+import YouTubeFireNews from './components/YouTubeFireNews';
 import StatsDashboard from './components/StatsDashboard';
 import RegionalAnalysis from './components/RegionalAnalysis';
 import ApiKeyModal from './components/ApiKeyModal';
@@ -10,10 +11,11 @@ import AdminPinModal from './components/AdminPinModal';
 import FireDetailModal from './components/FireDetailModal';
 import { getStoredApiKey, saveApiKey, fetchFireOccurrences } from './services/fireApi';
 
-// 일반 모바일 모드 4개 내비게이션 탭
+// 일반 모바일 모드 5개 내비게이션 탭 (실시간 지도, 발생 정보, 유튜브 뉴스, 화재 통계, 지역 분석)
 const NAV_ITEMS = [
   { id: 'MAP', label: '실시간 지도', icon: Map },
   { id: 'OCCUR_LIST', label: '발생 정보', icon: Flame },
+  { id: 'YOUTUBE', label: '유튜브 뉴스', icon: Youtube },
   { id: 'STATS', label: '화재 통계', icon: BarChart3 },
   { id: 'REGION', label: '지역 분석', icon: Building2 },
 ];
@@ -101,7 +103,7 @@ function App() {
             </div>
           </section>
 
-          {/* 우측 관제 패널: 실시간 발생정보 / 통계 / 지역분석 멀티 탭 */}
+          {/* 우측 관제 패널: 실시간 발생정보 / 유튜브 뉴스 / 통계 / 지역분석 멀티 탭 */}
           <section className="pc-right-data-panel">
             <div className="pc-panel-header pc-tabs-header">
               <div className="pc-tab-buttons">
@@ -111,6 +113,13 @@ function App() {
                 >
                   <Flame size={15} />
                   <span>실시간 발생 정보</span>
+                </button>
+                <button
+                  className={`pc-tab-btn ${pcRightTab === 'YOUTUBE' ? 'active' : ''}`}
+                  onClick={() => setPcRightTab('YOUTUBE')}
+                >
+                  <Youtube size={15} />
+                  <span>유튜브 화재 뉴스</span>
                 </button>
                 <button
                   className={`pc-tab-btn ${pcRightTab === 'STATS' ? 'active' : ''}`}
@@ -133,16 +142,18 @@ function App() {
               {pcRightTab === 'OCCUR_LIST' && (
                 <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />
               )}
+              {pcRightTab === 'YOUTUBE' && <YouTubeFireNews />}
               {pcRightTab === 'STATS' && <StatsDashboard />}
               {pcRightTab === 'REGION' && <RegionalAnalysis />}
             </div>
           </section>
         </main>
       ) : (
-        /* 📱 모바일 세로 뷰일 때: 기존 4탭 단일 화면 */
+        /* 📱 모바일 세로 뷰일 때: 5개 탭 화면 (실시간 지도, 발생 정보, 유튜브 뉴스, 통계, 지역분석) */
         <main className="app-content">
           {activeTab === 'MAP' && <FireMap onSelectIncident={(inc) => setSelectedIncident(inc)} />}
           {activeTab === 'OCCUR_LIST' && <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />}
+          {activeTab === 'YOUTUBE' && <YouTubeFireNews />}
           {activeTab === 'STATS' && <StatsDashboard />}
           {activeTab === 'REGION' && <RegionalAnalysis />}
         </main>

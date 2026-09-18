@@ -30,14 +30,18 @@ jobs:
         run: |
           python scripts/unified_daily_collector.py
 
+      - name: Run YouTube Fire News Collector
+        run: |
+          python scripts/youtube_fire_news_collector.py
+
       - name: Commit and push if changed
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/data/nfa_fire_database.json
+          git add src/data/nfa_fire_database.json src/data/youtube_fire_news.json
           if git diff --staged --quiet; then
             echo "No new data found today. Database is already up to date."
           else
-            git commit -m "[Auto-Update] Daily fire incidents data update"
+            git commit -m "[Auto-Update] Daily fire incidents and YouTube fire news update"
             git push
           fi
