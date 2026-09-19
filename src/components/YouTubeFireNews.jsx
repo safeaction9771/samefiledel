@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Flame,
   Search,
@@ -39,8 +39,8 @@ const PERIOD_OPTIONS = [
   { id: 'TODAY', label: '당일 (오늘)' },
   { id: '3DAYS', label: '3일간' },
   { id: '1MONTH', label: '1개월간' },
-  { id: 'CUSTOM', label: '📅 날짜 직접 선택' },
-  { id: 'ALL', label: '전체 영상' }
+  { id: '3MONTHS', label: '최근 3개월 (전체)' },
+  { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
 ];
 
 const YouTubeFireNews = () => {
@@ -57,12 +57,18 @@ const YouTubeFireNews = () => {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }, []);
 
+  const d90Str = useMemo(() => {
+    const d = new Date(2026, 8, 19);
+    d.setDate(d.getDate() - 89);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+
   const [customSelectedDate, setCustomSelectedDate] = useState(() => {
     const now = new Date(2026, 8, 19);
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
 
-  // 기간 필터링 계산
+  // 기간 필터링 계산 (최근 3개월 이내 데이터만 엄격하게 필터링)
   const filteredNews = useMemo(() => {
     const baseDate = new Date(2026, 8, 19, 23, 59, 59);
 
@@ -78,10 +84,19 @@ const YouTubeFireNews = () => {
     d30.setDate(d30.getDate() - 29);
     const d30Str = `${d30.getFullYear()}-${String(d30.getMonth() + 1).padStart(2, '0')}-${String(d30.getDate()).padStart(2, '0')}`;
 
+    const d90 = new Date(baseDate);
+    d90.setDate(d90.getDate() - 89);
+    const min3MonthStr = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`;
+
     return (youtubeNewsData || []).filter((item) => {
       const dateStr = item.date || item.datetime?.substring(0, 10) || '';
 
-      // 1. 기간 필터
+      // 🔒 [필수 정책] 최근 3개월(90일) 이내의 영상만 제공
+      if (dateStr && dateStr < min3MonthStr) {
+        return false;
+      }
+
+      // 1. 세부 기간 필터
       if (periodFilter === 'TODAY' && dateStr !== todayStr) {
         return false;
       }
@@ -92,6 +107,9 @@ const YouTubeFireNews = () => {
         return false;
       }
       if (periodFilter === '1MONTH' && dateStr < d30Str) {
+        return false;
+      }
+      if (periodFilter === '3MONTHS' && dateStr < min3MonthStr) {
         return false;
       }
       if (periodFilter === 'CUSTOM' && customSelectedDate && dateStr !== customSelectedDate) {
@@ -170,7 +188,7 @@ const YouTubeFireNews = () => {
                 유튜브 실시간 화재 뉴스
               </h2>
               <p style={{ fontSize: '0.72rem', color: '#fca5a5', margin: '2px 0 0 0' }}>
-                KBS·YTN·SBS·MBC·연합뉴스 등 최근 일주일간 방송 뉴스 영상
+                KBS·YTN·SBS·MBC·연합뉴스 등 최근 3개월 이내 방송 뉴스 영상
               </p>
             </div>
           </div>
@@ -339,6 +357,7 @@ const YouTubeFireNews = () => {
           </div>
           <input
             type="date"
+            min={d90Str}
             max={todayStr}
             value={customSelectedDate}
             onChange={(e) => setCustomSelectedDate(e.target.value)}
@@ -366,6 +385,8 @@ const YouTubeFireNews = () => {
             {periodFilter === '7DAYS' && ' - 최근 7일'}
             {periodFilter === 'TODAY' && ' - 오늘'}
             {periodFilter === '3DAYS' && ' - 최근 3일'}
+            {periodFilter === '1MONTH' && ' - 최근 1개월'}
+            {periodFilter === '3MONTHS' && ' - 최근 3개월'}
             {periodFilter === 'CUSTOM' && customSelectedDate ? ` - ${customSelectedDate}` : ''}
           </span>
         </div>

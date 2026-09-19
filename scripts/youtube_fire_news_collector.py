@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys
 import os
 import json
@@ -276,6 +276,12 @@ def main():
             
         datetime_str, date_str, time_str = parse_published_to_datetime(pub_text, title)
         
+        # 3개월 (90일) 이내의 자료만 필터링
+        cutoff_dt = datetime.now() - timedelta(days=90)
+        cutoff_str = cutoff_dt.strftime('%Y-%m-%d')
+        if date_str and date_str < cutoff_str:
+            continue
+
         region = extract_region(title + " " + desc)
         cause = extract_cause(title + " " + desc)
         status = extract_status(title + " " + desc)
