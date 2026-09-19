@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import sys
 import os
 import json
@@ -62,57 +62,63 @@ def extract_status(text):
     return '상황 수습'
 
 def parse_published_to_datetime(pub_text, title_text=""):
-    now = datetime(2026, 9, 19, 5, 15)
+    now = datetime(2026, 9, 19, 10, 20)
     
-    # Check title for explicit dates e.g. 2026.09.18 or 2026.09.17
-    m_title_date = re.search(r'(202[0-9])[\.\-/]([0-1]?[0-9])[\.\-/]([0-3]?[0-9])', title_text)
+    # 1. Check title for explicit date like 2026.09.18 or 2026-09-18
+    m_title_date = re.search(r'(202[0-9])[\.\-/]\s*([0-1]?[0-9])[\.\-/]\s*([0-3]?[0-9])', title_text)
     if m_title_date:
         y, m, d = m_title_date.groups()
-        dt_str = f"{y}-{int(m):02d}-{int(d):02d}"
-        return f"{dt_str} 18:00", dt_str, "18:00"
+        dt = datetime(int(y), int(m), int(d), 12, 0)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
 
     if not pub_text:
-        return now.strftime('%Y-%m-%d %H:%M'), now.strftime('%Y-%m-%d'), now.strftime('%H:%M')
-    
-    # 2026.09.18 or 2026-09-18
-    m_date = re.search(r'(202[0-9])[\.\-/]([0-1]?[0-9])[\.\-/]([0-3]?[0-9])', pub_text)
-    if m_date:
-        y, m, d = m_date.groups()
-        dt_str = f"{y}-{int(m):02d}-{int(d):02d}"
-        return f"{dt_str} 12:00", dt_str, "12:00"
+        return now.strftime('%Y-%m-%d %H:%M'), now.strftime('%Y-%m-%d'), now.strftime('%H:%M'), now
 
-    # '1시간 전', '3시간 전', '1일 전', '3일 전'
-    m_min = re.search(r'([0-9]+)\s*분\s*전', pub_text)
-    if m_min:
-        mins = int(m_min.group(1))
-        target_dt = now - timedelta(minutes=mins)
-        return target_dt.strftime('%Y-%m-%d %H:%M'), target_dt.strftime('%Y-%m-%d'), target_dt.strftime('%H:%M')
+    # 2. Check pub_text for date like 2026. 9. 18.
+    m_pub_date = re.search(r'(202[0-9])[\.\-/]\s*([0-1]?[0-9])[\.\-/]\s*([0-3]?[0-9])', pub_text)
+    if m_pub_date:
+        y, m, d = m_pub_date.groups()
+        dt = datetime(int(y), int(m), int(d), 12, 0)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
 
-    m_hour = re.search(r'([0-9]+)\s*시간\s*전', pub_text)
-    if m_hour:
-        hours = int(m_hour.group(1))
-        target_dt = now - timedelta(hours=hours)
-        return target_dt.strftime('%Y-%m-%d %H:%M'), target_dt.strftime('%Y-%m-%d'), target_dt.strftime('%H:%M')
-
-    m_day = re.search(r'([0-9]+)\s*일\s*전', pub_text)
-    if m_day:
-        days = int(m_day.group(1))
-        target_dt = now - timedelta(days=days)
-        return target_dt.strftime('%Y-%m-%d %H:%M'), target_dt.strftime('%Y-%m-%d'), target_dt.strftime('%H:%M')
-
-    m_week = re.search(r'([0-9]+)\s*주\s*전', pub_text)
-    if m_week:
-        weeks = int(m_week.group(1))
-        target_dt = now - timedelta(days=weeks*7)
-        return target_dt.strftime('%Y-%m-%d %H:%M'), target_dt.strftime('%Y-%m-%d'), target_dt.strftime('%H:%M')
+    # 3. Relative time expressions
+    m_year = re.search(r'([0-9]+)\s*년\s*전', pub_text)
+    if m_year:
+        years = int(m_year.group(1))
+        dt = now - timedelta(days=years * 365)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
 
     m_month = re.search(r'([0-9]+)\s*개월\s*전', pub_text)
     if m_month:
         months = int(m_month.group(1))
-        target_dt = now - timedelta(days=months*30)
-        return target_dt.strftime('%Y-%m-%d %H:%M'), target_dt.strftime('%Y-%m-%d'), target_dt.strftime('%H:%M')
+        dt = now - timedelta(days=months * 30)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
 
-    return now.strftime('%Y-%m-%d %H:%M'), now.strftime('%Y-%m-%d'), now.strftime('%H:%M')
+    m_week = re.search(r'([0-9]+)\s*주\s*전', pub_text)
+    if m_week:
+        weeks = int(m_week.group(1))
+        dt = now - timedelta(days=weeks * 7)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
+
+    m_day = re.search(r'([0-9]+)\s*일\s*전', pub_text)
+    if m_day:
+        days = int(m_day.group(1))
+        dt = now - timedelta(days=days)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
+
+    m_hour = re.search(r'([0-9]+)\s*시간\s*전', pub_text)
+    if m_hour:
+        hours = int(m_hour.group(1))
+        dt = now - timedelta(hours=hours)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
+
+    m_min = re.search(r'([0-9]+)\s*분\s*전', pub_text)
+    if m_min:
+        mins = int(m_min.group(1))
+        dt = now - timedelta(minutes=mins)
+        return dt.strftime('%Y-%m-%d %H:%M'), dt.strftime('%Y-%m-%d'), dt.strftime('%H:%M'), dt
+
+    return now.strftime('%Y-%m-%d %H:%M'), now.strftime('%Y-%m-%d'), now.strftime('%H:%M'), now
 
 def search_youtube_query(query):
     print(f"[*] Searching YouTube for: {query}")
@@ -217,7 +223,7 @@ def fetch_channel_rss(channel_name, channel_id):
     return items
 
 def main():
-    print("=== YouTube 실시간 화재 뉴스 수집 시작 ===")
+    print("=== YouTube 실시간 화재 뉴스 수집 시작 (최근 3개월 엄격 필터링) ===")
     
     all_raw_items = []
     
@@ -259,6 +265,11 @@ def main():
     seen_vids = set()
     processed_news = []
     
+    # 최근 3개월 (90일) 컷오프 기준일자 (2026-06-21)
+    cutoff_dt = datetime(2026, 9, 19, 10, 20) - timedelta(days=90)
+    cutoff_str = cutoff_dt.strftime('%Y-%m-%d')
+    print(f"[*] 3개월 컷오프 기준일: {cutoff_str} 이후 영상만 수집")
+    
     for item in all_raw_items:
         vid = item['videoId']
         if vid in seen_vids:
@@ -270,18 +281,20 @@ def main():
         pub_text = item['publishedText']
         desc = item.get('description', '')
         
+        # 년 전이 들어가거나 4개월 이상 지난 텍스트는 즉시 제외
+        if any(k in pub_text for k in ['년 전', '4개월 전', '5개월 전', '6개월 전', '7개월 전', '8개월 전', '9개월 전', '10개월 전', '11개월 전', '12개월 전']):
+            continue
+            
+        datetime_str, date_str, time_str, dt_obj = parse_published_to_datetime(pub_text, title)
+        
+        # 3개월 이전 영상 엄격 제외
+        if dt_obj < cutoff_dt or (date_str and date_str < cutoff_str):
+            continue
+            
         channel_name = owner.replace(' News', ' 뉴스').replace('NEWS', ' 뉴스').replace('OFFICIAL', '').strip()
         if not channel_name:
             channel_name = '화재뉴스'
-            
-        datetime_str, date_str, time_str = parse_published_to_datetime(pub_text, title)
         
-        # 3개월 (90일) 이내의 자료만 필터링
-        cutoff_dt = datetime.now() - timedelta(days=90)
-        cutoff_str = cutoff_dt.strftime('%Y-%m-%d')
-        if date_str and date_str < cutoff_str:
-            continue
-
         region = extract_region(title + " " + desc)
         cause = extract_cause(title + " " + desc)
         status = extract_status(title + " " + desc)
@@ -329,7 +342,7 @@ def main():
         
     processed_news.sort(key=lambda x: x['datetime'], reverse=True)
     
-    print(f"[+] Total collected unique YouTube fire news: {len(processed_news)} items")
+    print(f"[+] Total collected verified 3-month YouTube fire news: {len(processed_news)} items")
     
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
