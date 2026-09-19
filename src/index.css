@@ -298,10 +298,19 @@ body {
   border-radius: 16px;
   padding: 16px;
   transition: all 0.2s ease;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .glass-card:hover {
   border-color: rgba(255, 255, 255, 0.18);
+}
+
+.youtube-news-view {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* 지도 영역 커스텀 */

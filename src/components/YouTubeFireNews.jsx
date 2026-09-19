@@ -155,16 +155,18 @@ const YouTubeFireNews = () => {
   const visibleCards = filteredNews.slice(0, displayLimit);
 
   return (
-    <div className="tab-panel-container" style={{ padding: '12px 14px 80px 14px', maxWidth: 860, margin: '0 auto' }}>
+    <div className="stats-view youtube-news-view" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden', padding: '12px 12px 80px 12px' }}>
       {/* 🔴 상단 배너 타이틀 */}
       <div
         style={{
           background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.22) 0%, rgba(15, 23, 42, 0.9) 100%)',
           border: '1px solid rgba(239, 68, 68, 0.4)',
           borderRadius: 16,
-          padding: '14px 16px',
-          marginBottom: 12,
-          boxShadow: '0 4px 20px rgba(220, 38, 38, 0.15)'
+          padding: '12px 14px',
+          marginBottom: 10,
+          boxShadow: '0 4px 20px rgba(220, 38, 38, 0.15)',
+          width: '100%',
+          boxSizing: 'border-box'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -395,8 +397,8 @@ const YouTubeFireNews = () => {
         </div>
       </div>
 
-      {/* 🎴 상세 카드 목록 (발생 정보 목록과 완벽히 동일한 카드 레이아웃 + 영상 미리보기) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* 🎴 상세 카드 목록 (스마트폰 화면에 100% 맞춤형 반응형 카드 레이아웃) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', boxSizing: 'border-box' }}>
         {visibleCards.length === 0 ? (
           <div
             style={{
@@ -404,7 +406,9 @@ const YouTubeFireNews = () => {
               padding: '36px 16px',
               background: 'rgba(15, 23, 42, 0.85)',
               border: '1px dashed rgba(255, 255, 255, 0.15)',
-              borderRadius: 16
+              borderRadius: 16,
+              width: '100%',
+              boxSizing: 'border-box'
             }}
           >
             <Video size={36} style={{ color: '#ef4444', margin: '0 auto 10px auto' }} />
@@ -445,13 +449,18 @@ const YouTubeFireNews = () => {
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 position: 'relative',
-                border: '1px solid rgba(255, 255, 255, 0.08)'
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+                padding: '14px'
               }}
               title="클릭하여 영상 시청 및 상세 정보 보기"
             >
               {/* 상단 뱃지 라인 */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', minWidth: 0 }}>
                   <span
                     style={{
                       background: 'rgba(239, 68, 68, 0.15)',
@@ -459,7 +468,8 @@ const YouTubeFireNews = () => {
                       padding: '2px 8px',
                       borderRadius: 4,
                       fontSize: '0.72rem',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      flexShrink: 0
                     }}
                   >
                     {item.region} #{idx + 1}
@@ -477,7 +487,8 @@ const YouTubeFireNews = () => {
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 3
+                      gap: 3,
+                      flexShrink: 0
                     }}
                   >
                     <Tv size={10} />
@@ -493,14 +504,15 @@ const YouTubeFireNews = () => {
                       padding: '1px 6px',
                       borderRadius: 4,
                       fontSize: '0.66rem',
-                      fontWeight: 700
+                      fontWeight: 700,
+                      flexShrink: 0
                     }}
                   >
                     {item.statusText || '완진'}
                   </span>
                 </div>
 
-                <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 'auto' }}>
                   <Clock size={12} style={{ display: 'inline', marginRight: 3 }} />
                   {item.datetime || item.date}
                 </span>
@@ -509,11 +521,13 @@ const YouTubeFireNews = () => {
               {/* 뉴스 제목 */}
               <h4
                 style={{
-                  fontSize: '0.92rem',
+                  fontSize: '0.9rem',
                   fontWeight: 800,
                   color: '#f8fafc',
                   marginBottom: 8,
-                  lineHeight: 1.4
+                  lineHeight: 1.4,
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word'
                 }}
               >
                 📍 {item.title}
@@ -540,6 +554,7 @@ const YouTubeFireNews = () => {
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover',
+                    display: 'block',
                     transition: 'transform 0.3s ease'
                   }}
                   onError={(e) => {
@@ -594,32 +609,42 @@ const YouTubeFireNews = () => {
                 </div>
               </div>
 
-              {/* 2x2 상세 그리드 정보 (발생정보 탭과 100% 동일) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: '0.78rem', color: '#cbd5e1' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {/* 2x2 상세 그리드 정보 (반응형 minmax(0, 1fr) 적용으로 스마트폰 잘림 방지) */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 8,
+                  fontSize: '0.76rem',
+                  color: '#cbd5e1',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
                   <AlertTriangle size={14} style={{ color: '#f59e0b', flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, fontSize: '0.74rem' }}>
                     원인: {item.fireCause || item.cause}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
                   <Building size={14} style={{ color: '#38bdf8', flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, fontSize: '0.74rem' }}>
                     출처: {item.channel}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
                   <Users size={14} style={{ color: '#ef4444', flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, fontSize: '0.74rem' }}>
                     인명피해: {item.casualtyText || '조사 중'}
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, overflow: 'hidden' }}>
                   <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, fontSize: '0.74rem' }}>
                     추정피해: {item.damageAmount || '조사 중'}
                   </span>
                 </div>
@@ -664,16 +689,14 @@ const YouTubeFireNews = () => {
       {/* 🎬 유튜브 영상 재생 팝업 모달 */}
       {playingVideo && (
         <div
+          className="modal-backdrop"
           style={{
-            position: 'fixed',
-            inset: 0,
             zIndex: 9999,
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
+            padding: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 16
+            boxSizing: 'border-box'
           }}
           onClick={() => setPlayingVideo(null)}
         >
@@ -681,11 +704,16 @@ const YouTubeFireNews = () => {
             style={{
               background: '#0f172a',
               border: '1px solid rgba(239, 68, 68, 0.4)',
-              borderRadius: 18,
+              borderRadius: 16,
               width: '100%',
-              maxWidth: 640,
-              overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.8)'
+              maxWidth: 480,
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.85)',
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box'
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -695,14 +723,15 @@ const YouTubeFireNews = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '12px 16px',
+                padding: '10px 14px',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                background: 'rgba(30, 41, 59, 0.6)'
+                background: 'rgba(30, 41, 59, 0.7)',
+                flexShrink: 0
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Tv size={16} color="#ef4444" />
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#f8fafc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <Tv size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {playingVideo.channel} 화재 보도 영상
                 </span>
               </div>
@@ -713,7 +742,10 @@ const YouTubeFireNews = () => {
                   border: 'none',
                   color: '#94a3b8',
                   cursor: 'pointer',
-                  padding: 4
+                  padding: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 <X size={20} />
@@ -721,7 +753,7 @@ const YouTubeFireNews = () => {
             </div>
 
             {/* 유튜브 반응형 임베드 플레이어 */}
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000' }}>
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', background: '#000', flexShrink: 0 }}>
               <iframe
                 src={`https://www.youtube-nocookie.com/embed/${playingVideo.videoId}?autoplay=1`}
                 title={playingVideo.title}
@@ -733,25 +765,26 @@ const YouTubeFireNews = () => {
                   top: 0,
                   left: 0,
                   width: '100%',
-                  height: '100%'
+                  height: '100%',
+                  border: 0
                 }}
               />
             </div>
 
             {/* 영상 상세 정보 */}
-            <div style={{ padding: 16 }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc', marginBottom: 8, lineHeight: 1.4 }}>
+            <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, boxSizing: 'border-box' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#f8fafc', margin: 0, lineHeight: 1.4, wordBreak: 'break-word' }}>
                 {playingVideo.title}
               </h3>
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span
                   style={{
                     background: 'rgba(239, 68, 68, 0.15)',
                     color: '#f87171',
                     padding: '2px 8px',
                     borderRadius: 6,
-                    fontSize: '0.72rem',
+                    fontSize: '0.7rem',
                     fontWeight: 700
                   }}
                 >
@@ -763,7 +796,7 @@ const YouTubeFireNews = () => {
                     color: '#38bdf8',
                     padding: '2px 8px',
                     borderRadius: 6,
-                    fontSize: '0.72rem',
+                    fontSize: '0.7rem',
                     fontWeight: 700
                   }}
                 >
@@ -775,7 +808,7 @@ const YouTubeFireNews = () => {
                     color: '#34d399',
                     padding: '2px 8px',
                     borderRadius: 6,
-                    fontSize: '0.72rem',
+                    fontSize: '0.7rem',
                     fontWeight: 700
                   }}
                 >
@@ -786,15 +819,16 @@ const YouTubeFireNews = () => {
               {playingVideo.description && (
                 <p
                   style={{
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     color: '#94a3b8',
-                    lineHeight: 1.6,
+                    lineHeight: 1.5,
                     background: 'rgba(30, 41, 59, 0.5)',
-                    padding: '10px 12px',
+                    padding: '8px 10px',
                     borderRadius: 8,
-                    marginBottom: 14,
-                    maxHeight: 100,
-                    overflowY: 'auto'
+                    margin: 0,
+                    maxHeight: 80,
+                    overflowY: 'auto',
+                    wordBreak: 'break-word'
                   }}
                 >
                   {playingVideo.description}
@@ -802,7 +836,7 @@ const YouTubeFireNews = () => {
               )}
 
               {/* 하단 버튼 */}
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                 <a
                   href={playingVideo.videoUrl}
                   target="_blank"
@@ -810,17 +844,17 @@ const YouTubeFireNews = () => {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 6,
+                    gap: 5,
                     background: '#ef4444',
                     color: '#ffffff',
-                    padding: '8px 14px',
+                    padding: '7px 12px',
                     borderRadius: 8,
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     fontWeight: 700,
                     textDecoration: 'none'
                   }}
                 >
-                  <ExternalLink size={14} /> YouTube 앱으로 열기
+                  <ExternalLink size={13} /> YouTube 앱으로 열기
                 </a>
                 <button
                   onClick={() => setPlayingVideo(null)}
@@ -828,9 +862,9 @@ const YouTubeFireNews = () => {
                     background: 'rgba(255, 255, 255, 0.1)',
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     color: '#cbd5e1',
-                    padding: '8px 14px',
+                    padding: '7px 12px',
                     borderRadius: 8,
-                    fontSize: '0.78rem',
+                    fontSize: '0.75rem',
                     fontWeight: 600,
                     cursor: 'pointer'
                   }}
