@@ -51,26 +51,26 @@ const YouTubeFireNews = () => {
   const [displayLimit, setDisplayLimit] = useState(30);
   const [playingVideo, setPlayingVideo] = useState(null);
 
-  // 오늘 날짜 계산 (2026-09-19)
+  // 오늘 날짜 계산 (항상 현재 일자 기준 실시간 동기화)
   const todayStr = useMemo(() => {
-    const now = new Date(2026, 8, 19); // 2026-09-19
+    const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   }, []);
 
   const d90Str = useMemo(() => {
-    const d = new Date(2026, 8, 19);
+    const d = new Date();
     d.setDate(d.getDate() - 89);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
 
   const [customSelectedDate, setCustomSelectedDate] = useState(() => {
-    const now = new Date(2026, 8, 19);
+    const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
 
   // 기간 필터링 계산 (최근 3개월 이내 데이터만 엄격하게 필터링)
   const filteredNews = useMemo(() => {
-    const baseDate = new Date(2026, 8, 19, 23, 59, 59);
+    const baseDate = new Date();
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);
