@@ -59,8 +59,22 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
     // 최신 발생일시 기준 엄격한 내림차순 정렬 (당일/최신 속보 최우선)
     normalizedList.sort((a, b) => b.sortKey.localeCompare(a.sortKey));
 
-    const recentIncidents = normalizedList.slice(0, 20);
-    for (const inc of recentIncidents) {
+    // 🔒 속보 티커: 오늘(당일) 및 최근 24시간 이내 최신 화재 건만 엄격하게 표출 (18일 이전 오래된 건 완전 배제)
+    const now = new Date();
+    const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayYMD = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    // 당일(2026-09-20) 및 어제(2026-09-19) 건만 필터링
+    const todayAndRecent = normalizedList.filter(
+      (inc) => inc.datetime && (inc.datetime.startsWith(todayYMD) || inc.datetime.startsWith(yesterdayYMD))
+    );
+
+    const targetList = todayAndRecent.length > 0 ? todayAndRecent.slice(0, 15) : normalizedList.slice(0, 10);
+
+    for (const inc of targetList) {
       items.push(
         `🔥 [공식속보] [${inc.region}] ${inc.place} (발생일시: ${inc.datetime}) - ${inc.status} [원인: ${inc.cause}]`
       );
