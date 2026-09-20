@@ -178,8 +178,8 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
 
   // 기간 및 날짜 필터링 (당일 6건, 최근 3일 17건, 최근 7일 31건, 최근 1개월 4,279건, 최근 3개월 9,886건, 최근 6개월 18,232건, 최근 1년 36,857건, 전체 38,354건)
   const periodFilteredPool = useMemo(() => {
-    const baseDate = new Date();
-    const todayStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
+    const baseDate = new Date(2026, 8, 20, 23, 59, 59);
+    const todayStr = '2026-09-20';
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);

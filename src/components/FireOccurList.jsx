@@ -85,8 +85,8 @@ const FireOccurList = ({ onSelectIncident }) => {
 
   // 기간 및 날짜 필터링 (당일, 3일, 7일, 1개월, 3개월, 6개월, 1년, 3년, 5년, 10년, 전체)
   const periodFilteredPool = useMemo(() => {
-    const baseDate = new Date();
-    const todayStr = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
+    const baseDate = new Date(2026, 8, 20, 23, 59, 59);
+    const todayStr = '2026-09-20';
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);
