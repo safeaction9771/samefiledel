@@ -34,16 +34,6 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
   const dynamicTickerText = useMemo(() => {
     const items = [];
 
-    // 사용자가 지도/목록에서 선택한 사건이 있다면 1순위로 즉시 노출
-    if (latestIncident) {
-      const normSel = normalizeIncident(latestIncident);
-      if (normSel) {
-        items.push(
-          `🚨 [선택사건] [${normSel.region}] ${normSel.place} (발생일시: ${normSel.datetime}) - ${normSel.status} [원인: ${normSel.cause}]`
-        );
-      }
-    }
-
     // 실시간 OpenAPI 수신 속보 + 소방청 공식 실데이터 기록 병합
     const combined = [...liveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
     const seen = new Set();
@@ -67,14 +57,22 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayYMD = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
 
-    // 당일(2026-09-20) 및 어제(2026-09-19) 건만 필터링
+    // 사용자가 지도/목록에서 선택한 사건이 있다면 오늘/어제 건에 한하여 1순위 노출
+    if (latestIncident) {
+      const normSel = normalizeIncident(latestIncident);
+      if (normSel && normSel.datetime && (normSel.datetime.startsWith(todayYMD) || normSel.datetime.startsWith(yesterdayYMD))) {
+        items.push(
+          `🚨 [선택사건] [${normSel.region}] ${normSel.place} (발생일시: ${normSel.datetime}) - ${normSel.status} [원인: ${normSel.cause}]`
+        );
+      }
+    }
+
+    // 당일(2026-09-20) 및 어제(2026-09-19) 건만 엄격하게 필터링 (18일 이전 절대 미포함)
     const todayAndRecent = normalizedList.filter(
       (inc) => inc.datetime && (inc.datetime.startsWith(todayYMD) || inc.datetime.startsWith(yesterdayYMD))
     );
 
-    const targetList = todayAndRecent.length > 0 ? todayAndRecent.slice(0, 15) : normalizedList.slice(0, 10);
-
-    for (const inc of targetList) {
+    for (const inc of todayAndRecent) {
       items.push(
         `🔥 [공식속보] [${inc.region}] ${inc.place} (발생일시: ${inc.datetime}) - ${inc.status} [원인: ${inc.cause}]`
       );
