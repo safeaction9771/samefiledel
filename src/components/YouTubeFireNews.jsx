@@ -78,6 +78,17 @@ const YouTubeFireNews = () => {
     const min3MonthStr = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`;
 
     return (youtubeNewsData || []).filter((item) => {
+      const title = item.title || '';
+
+      // 🔒 [필수 정책] 비화재성 정치/시사/은유적 뉴스 원천 차단 (파병, 청와대 진화, 불순물 등)
+      const excludeWords = [
+        '파병', '트럼프', '불순물', '불법', '불안', '불출마', '불통', '불만',
+        '청와대 진화', '논란 진화', '갈등 진화', '사태 진화', '대통령실', '국회', '의원', '정치', '선거'
+      ];
+      if (excludeWords.some(w => title.includes(w))) {
+        return false;
+      }
+
       const dateStr = item.date || item.datetime?.substring(0, 10) || '';
 
       // 🔒 [필수 정책] 최근 3개월(90일) 이내의 영상만 제공
