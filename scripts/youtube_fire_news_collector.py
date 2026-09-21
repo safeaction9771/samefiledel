@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys
 import os
 import json
@@ -162,11 +162,18 @@ def search_youtube_query(query):
                         desc_runs = desc_snippets[0].get('snippetText', {}).get('runs', [])
                         desc = "".join([r.get('text', '') for r in desc_runs])
                     
-                    fire_keywords = ['화재', '불', '소방', '진화', '전소', '산불', '폭발', '발화', '구조', '소방청', '소방서', '소방관']
-                    if not any(k in title for k in fire_keywords):
+                    # 순수 화재·재난 키워드 (단순 '불'이나 '진화' 단독 매칭으로 인한 오수집 방지)
+                    fire_keywords = ['화재', '산불', '불길', '전소', '발화', '소방차', '소방관', '소방서', '소방대', '119', '화마', '방화']
+                    has_fire = any(k in title for k in fire_keywords) or ('진화' in title and any(fk in title for fk in ['불', '소방', '불길', '헬기', '화재', '산불']))
+                    if not has_fire:
                         continue
 
-                    exclude_keywords = ['불닭', '불장난', '캠핑 불멍', '마인크래프트', '게임']
+                    # 정치·시사·은유적 표현 및 비화재성 단어 배제
+                    exclude_keywords = [
+                        '불닭', '불장난', '캠핑 불멍', '마인크래프트', '게임', '파병', '트럼프',
+                        '불순물', '불법', '불안', '불출마', '불통', '불만', '청와대 진화',
+                        '논란 진화', '갈등 진화', '사태 진화', '대통령실', '국회', '의원', '정치', '선거'
+                    ]
                     if any(ek in title for ek in exclude_keywords):
                         continue
 
@@ -205,8 +212,17 @@ def fetch_channel_rss(channel_name, channel_id):
                 if not vid or not title:
                     continue
                 
-                fire_keywords = ['화재', '불', '소방', '진화', '전소', '산불', '폭발', '발화', '구조', '소방서']
-                if not any(k in title for k in fire_keywords):
+                fire_keywords = ['화재', '산불', '불길', '전소', '발화', '소방차', '소방관', '소방서', '소방대', '119', '화마', '방화']
+                has_fire = any(k in title for k in fire_keywords) or ('진화' in title and any(fk in title for fk in ['불', '소방', '불길', '헬기', '화재', '산불']))
+                if not has_fire:
+                    continue
+
+                exclude_keywords = [
+                    '불닭', '불장난', '캠핑 불멍', '마인크래프트', '게임', '파병', '트럼프',
+                    '불순물', '불법', '불안', '불출마', '불통', '불만', '청와대 진화',
+                    '논란 진화', '갈등 진화', '사태 진화', '대통령실', '국회', '의원', '정치', '선거'
+                ]
+                if any(ek in title for ek in exclude_keywords):
                     continue
                 
                 items.append({
