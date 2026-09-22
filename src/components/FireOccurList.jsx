@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ShieldAlert, Flame, MapPin, Clock, AlertTriangle, Building, Users, Search, Calendar, Map, RefreshCw, CalendarDays } from 'lucide-react';
 import { fetchFireOccurrences } from '../services/fireApi';
 import { NFA_OFFICIAL_INCIDENTS_DATABASE, REGIONS, getIncidentSourceBadge, NFA_10YEARS_SUMMARY } from '../data/officialIncidents';
+import { formatKSTDate } from '../utils/dateUtils';
 
 const FireOccurList = ({ onSelectIncident }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,8 +86,8 @@ const FireOccurList = ({ onSelectIncident }) => {
 
   // 기간 및 날짜 필터링 (당일, 3일, 7일, 1개월, 3개월, 6개월, 1년, 3년, 5년, 10년, 전체)
   const periodFilteredPool = useMemo(() => {
-    const baseDate = new Date(2026, 8, 20, 23, 59, 59);
-    const todayStr = '2026-09-20';
+    const baseDate = new Date();
+    const todayStr = formatKSTDate(baseDate);
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);

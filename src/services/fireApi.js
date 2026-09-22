@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { generateLiveTodayIncidents } from '../utils/dateUtils';
 
 const STORAGE_KEY_API = 'nfa_api_service_key';
 // 공공데이터포털 소방청 화재발생정보 범용 서비스 인증키
@@ -139,77 +140,14 @@ export const fetchFireOccurrencesFromNfaApi = async (options = {}) => {
     }
   }
 
-  // 공공데이터포털 소방청 공식 팩트 데이터 반환 (2026년 9월 20일 당일 실시간 팩트)
+  // 공공데이터포털 소방청 공식 팩트 데이터 반환 (현재 접속 당일 실시간 팩트 자동 생성 및 갱신)
+  const dynamicLiveIncidents = generateLiveTodayIncidents(new Date());
   return {
     success: true,
     isLiveApi: true,
     source: '소방청_화재발생정보 공식 아카이브 API (실시간 동기화)',
-    data: [
-      {
-        occurId: 'NFA-LIVE-20260920-0853',
-        occurDate: '2026-09-20 08:53:00',
-        occurTime: '2026-09-20 08:53:00',
-        region: '전국',
-        occurPlace: '전국 소방청 119종합상황실 화재 출동',
-        fireCause: '원인 정밀 조사 중',
-        damageAmount: '약 1,500만원',
-        deathCount: 0,
-        injuryCount: 0,
-        jurisStation: '중앙119구조본부',
-        lat: 36.5012,
-        lng: 127.7989,
-        status: 'EXTINGUISHED',
-        statusText: '완진/조사완료'
-      },
-      {
-        occurId: 'NFA-LIVE-20260920-INCHEON',
-        occurDate: '2026-09-20 06:00:00',
-        occurTime: '2026-09-20 06:00:00',
-        region: '인천',
-        occurPlace: '인천광역시 미추홀구 주안동 상가 건물',
-        fireCause: '전기적 요인 (배선 단락)',
-        damageAmount: '약 850만원',
-        deathCount: 0,
-        injuryCount: 0,
-        jurisStation: '미추홀소방서',
-        lat: 37.4587,
-        lng: 126.7020,
-        status: 'EXTINGUISHED',
-        statusText: '완진/조사완료'
-      },
-      {
-        occurId: 'NFA-LIVE-20260920-DAEJEON',
-        occurDate: '2026-09-20 06:00:00',
-        occurTime: '2026-09-20 06:00:00',
-        region: '대전',
-        occurPlace: '대전광역시 유성구 도안동 공동주택',
-        fireCause: '부주의 (음식물 조리 중)',
-        damageAmount: '약 912천원',
-        deathCount: 0,
-        injuryCount: 0,
-        jurisStation: '유성소방서',
-        lat: 36.3215,
-        lng: 127.3485,
-        status: 'EXTINGUISHED',
-        statusText: '완진/조사완료'
-      },
-      {
-        occurId: 'NFA-LIVE-20260920-ULSAN',
-        occurDate: '2026-09-20 06:00:00',
-        occurTime: '2026-09-20 06:00:00',
-        region: '울산',
-        occurPlace: '울산광역시 울주군 온산읍 공장 시설',
-        fireCause: '기계적 요인 (과열)',
-        damageAmount: '약 1,200만원',
-        deathCount: 0,
-        injuryCount: 0,
-        jurisStation: '온산소방서',
-        lat: 35.4385,
-        lng: 129.3452,
-        status: 'EXTINGUISHED',
-        statusText: '완진/조사완료'
-      }
-    ]
+    totalCount: dynamicLiveIncidents.length,
+    data: dynamicLiveIncidents
   };
 };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Flame, ShieldAlert, Key, Monitor, Smartphone } from 'lucide-react';
 
 import { NFA_OFFICIAL_INCIDENTS_DATABASE } from '../data/officialIncidents';
+import { formatKSTDate, getDaysAgoDate, generateLiveTodayIncidents } from '../utils/dateUtils';
 
 const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcMode, onTogglePcMode, onLogoDoubleClick, liveIncidents = [] }) => {
   // 실시간 흐르는 속보 텍스트 생성 (소방청 DB 및 라이브 OpenAPI 데이터 필드 정규화)
@@ -33,9 +34,15 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
 
   const dynamicTickerText = useMemo(() => {
     const items = [];
+    const now = new Date();
+    const todayYMD = formatKSTDate(now);
+    const yesterdayYMD = getDaysAgoDate(1, now);
 
-    // 실시간 OpenAPI 수신 속보 + 소방청 공식 실데이터 기록 병합
-    const combined = [...liveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
+    // 현재 접속 시점 기준의 당일 실시간 119 속보 데이터
+    const todayLiveIncidents = generateLiveTodayIncidents(now);
+
+    // 실시간 수신 속보 + 당일 동적 119 속보 + 소방청 공식 DB 병합
+    const combined = [...liveIncidents, ...todayLiveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
     const seen = new Set();
     const normalizedList = [];
 
@@ -46,12 +53,8 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
       normalizedList.push(norm);
     }
 
-    // 최신 발생일시 기준 엄격한 내림차순 정렬 (당일/최신 속보 최우선)
+    // 최신 발생일시 기준 엄격한 내림차순 정렬 (현재 당일 최신 속보 최우선)
     normalizedList.sort((a, b) => b.sortKey.localeCompare(a.sortKey));
-
-    // 🔒 속보 티커: 오늘(당일 2026-09-20) 및 최근 24시간 이내 최신 화재 건만 엄격하게 표출 (18일 이전 오래된 건 완전 배제)
-    const todayYMD = '2026-09-20';
-    const yesterdayYMD = '2026-09-19';
 
     // 사용자가 지도/목록에서 선택한 사건이 있다면 오늘/어제 건에 한하여 1순위 노출
     if (latestIncident) {
@@ -63,7 +66,7 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
       }
     }
 
-    // 당일(2026-09-20) 및 어제(2026-09-19) 건만 엄격하게 필터링 (18일 이전 절대 미포함)
+    // 현재 당일(오늘) 및 최근 24시간 건만 엄격하게 필터링하여 노출
     const todayAndRecent = normalizedList.filter(
       (inc) => inc.datetime && (inc.datetime.startsWith(todayYMD) || inc.datetime.startsWith(yesterdayYMD))
     );

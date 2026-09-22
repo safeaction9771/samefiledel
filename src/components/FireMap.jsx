@@ -4,6 +4,7 @@ import L from 'leaflet';
 import { Flame, AlertTriangle, ShieldAlert, CheckCircle2, Siren, RefreshCw, Calendar, CalendarDays, PlusCircle } from 'lucide-react';
 import { fetchFireOccurrences } from '../services/fireApi';
 import { NFA_OFFICIAL_INCIDENTS_DATABASE, getCoordinatesForPlace, getIncidentSourceBadge, NFA_10YEARS_SUMMARY } from '../data/officialIncidents';
+import { formatKSTDate } from '../utils/dateUtils';
 import 'leaflet/dist/leaflet.css';
 
 // Leaflet 지도 크기 변경 시 자동 리사이즈 컴포넌트
@@ -176,10 +177,10 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     return list.sort((a, b) => new Date(b.occurTime) - new Date(a.occurTime));
   }, [liveApiData]);
 
-  // 기간 및 날짜 필터링 (당일 6건, 최근 3일 17건, 최근 7일 31건, 최근 1개월 4,279건, 최근 3개월 9,886건, 최근 6개월 18,232건, 최근 1년 36,857건, 전체 38,354건)
+  // 기간 및 날짜 필터링 (당일, 최근 3일, 최근 7일, 최근 1개월, 최근 3개월 등 실시간 동적 계산)
   const periodFilteredPool = useMemo(() => {
-    const baseDate = new Date(2026, 8, 20, 23, 59, 59);
-    const todayStr = '2026-09-20';
+    const baseDate = new Date();
+    const todayStr = formatKSTDate(baseDate);
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);

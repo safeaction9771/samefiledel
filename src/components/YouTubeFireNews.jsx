@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import youtubeNewsData from '../data/youtube_fire_news.json';
 import { REGIONS } from '../data/officialIncidents';
+import { formatKSTDate, getDaysAgoDate } from '../utils/dateUtils';
 
 // 주요 방송사 및 채널 필터 칩 목록
 const BROADCASTERS = [
@@ -51,15 +52,16 @@ const YouTubeFireNews = () => {
   const [displayLimit, setDisplayLimit] = useState(30);
   const [playingVideo, setPlayingVideo] = useState(null);
 
-  // 오늘 날짜 계산 (2026-09-20)
-  const todayStr = '2026-09-20';
-  const d90Str = '2026-06-23';
+  // 오늘 날짜 계산 (실시간 동적)
+  const now = new Date();
+  const todayStr = formatKSTDate(now);
+  const d90Str = getDaysAgoDate(90, now);
 
-  const [customSelectedDate, setCustomSelectedDate] = useState('2026-09-20');
+  const [customSelectedDate, setCustomSelectedDate] = useState(() => formatKSTDate(new Date()));
 
   // 기간 필터링 계산 (최근 3개월 이내 데이터만 엄격하게 필터링)
   const filteredNews = useMemo(() => {
-    const baseDate = new Date(2026, 8, 20, 23, 59, 59);
+    const baseDate = new Date();
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);
