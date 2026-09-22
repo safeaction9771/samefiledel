@@ -36,10 +36,10 @@ const BROADCASTERS = [
 ];
 
 const PERIOD_OPTIONS = [
-  { id: '7DAYS', label: '7일간 (최근 일주일)' },
   { id: 'TODAY', label: '당일 (오늘)' },
-  { id: '3DAYS', label: '3일간' },
-  { id: '1MONTH', label: '1개월간' },
+  { id: '7DAYS', label: '최근 7일 (일주일)' },
+  { id: '3DAYS', label: '최근 3일간' },
+  { id: '1MONTH', label: '최근 1개월간' },
   { id: '3MONTHS', label: '최근 3개월 (전체)' },
   { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
 ];

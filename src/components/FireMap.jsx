@@ -342,6 +342,8 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
   ];
 
   const periodOptions = [
+    { id: 'TODAY', label: '당일 (오늘)' },
+    { id: '7DAYS', label: '최근 7일' },
     { id: '1MONTH', label: '최근 1개월 (100핀)' },
     { id: '3MONTHS', label: '최근 3개월 (200핀)' },
     { id: '6MONTHS', label: '최근 6개월 (300핀)' },
@@ -351,8 +353,6 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     { id: '10YEARS', label: '최근 10년 (700핀)' },
     { id: '20YEARS', label: '최근 20년 (800핀)' },
     { id: 'ALL', label: '전체 기록 (800핀)' },
-    { id: 'TODAY', label: '당일 (오늘)' },
-    { id: '7DAYS', label: '최근 7일' },
     { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
   ];
 
