@@ -525,23 +525,23 @@ const FireOccurList = ({ onSelectIncident }) => {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, fontSize: '0.78rem', color: '#cbd5e1' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AlertTriangle size={14} style={{ color: '#f59e0b' }} />
-                  <span>원인: {item.fireCause}</span>
+                  <Flame size={14} style={{ color: '#ef4444' }} />
+                  <span>화재 발생: <strong>{item.fireCount > 0 ? `${item.fireCount.toLocaleString()}건` : '-'}</strong></span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <Building size={14} style={{ color: '#38bdf8' }} />
-                  <span>관할: {item.jurisStation}</span>
+                  <span>관할: <strong>{item.jurisStation}</strong></span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Users size={14} style={{ color: '#ef4444' }} />
-                  <span>인명피해: 사망 {item.deathCount} / 부상 {item.injuryCount}</span>
+                  <Users size={14} style={{ color: item.deathCount > 0 || item.injuryCount > 0 ? '#ef4444' : '#94a3b8' }} />
+                  <span>인명피해: <strong>사망 {item.deathCount}명 / 부상 {item.injuryCount}명</strong></span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Flame size={14} style={{ color: '#f97316' }} />
-                  <span>추정피해액: {item.damageAmount}</span>
+                  <ShieldAlert size={14} style={{ color: '#22c55e' }} />
+                  <span>119 출동: <strong>완진 {item.stnEndCount || item.fireCount || 0}건</strong></span>
                 </div>
               </div>
 

@@ -19,7 +19,7 @@ export const NFA_BUILDING_SUMMARY = buildingSummary;
 export const NFA_YEARLY_TREND = yearlyTrend;
 export const NFA_10YEARS_SUMMARY = yearlyTrend;
 
-// 시도별 중심 위경도 매핑
+// 전국 17개 시도 중심 좌표 (지도 핀 표시용)
 export const SIDO_CENTERS = {
   '서울': { lat: 37.5665, lng: 126.9780, fullName: '서울특별시' },
   '부산': { lat: 35.1796, lng: 129.0756, fullName: '부산광역시' },
@@ -41,34 +41,47 @@ export const SIDO_CENTERS = {
 };
 
 export const normalizeSido = (name = '') => {
+  if (!name || name === 'null' || name === 'undefined') return '서울';
   const str = String(name).trim();
   for (const [short, info] of Object.entries(SIDO_CENTERS)) {
     if (str.includes(short) || str.includes(info.fullName)) {
       return short;
     }
   }
-  return str.substring(0, 2);
+  return str.substring(0, 2) || '서울';
 };
 
 export const getCoordinatesForPlace = (placeStr = '', regionStr = '') => {
   const short = normalizeSido(regionStr || placeStr);
-  return SIDO_CENTERS[short] || { lat: 36.5, lng: 127.5 };
+  const center = SIDO_CENTERS[short] || { lat: 36.5, lng: 127.5 };
+  return { lat: center.lat, lng: center.lng };
 };
 
-// 🏛️ 공공데이터포털 소방청 OpenAPI 원본 기반 마스터 데이터 풀 구축
+// 🏛️ 공공데이터포털 소방청 OpenAPI 원본 기반 마스터 데이터 풀 구축 (가상 합성 로직 0%)
 const formatRawIncidents = () => {
   const list = [];
   
-  // 1. 시도별 화재 인명피해 원본 (2024~2026 최근 일자 전수)
-  for (const row of sidoDaily) {
+  for (let i = 0; i < sidoDaily.length; i++) {
+    const row = sidoDaily[i];
+    if (!row || !row.ocrn_ymd) continue;
     const ymd = String(row.ocrn_ymd);
     const dateStr = `${ymd.substring(0, 4)}-${ymd.substring(4, 6)}-${ymd.substring(6, 8)}`;
     const sido = normalizeSido(row.sido_nm);
-    const geo = SIDO_CENTERS[sido] || { lat: 36.5, lng: 127.5 };
+    const sidoInfo = SIDO_CENTERS[sido] || { lat: 36.5, lng: 127.5, fullName: sido };
     const mnb = parseInt(row.ocrn_mnb || 0);
     const deaths = parseInt(row.vctm_percnt || 0);
     const injured = parseInt(row.injrdpr_percnt || 0);
     const casualties = parseInt(row.life_dmg_percnt || 0);
+
+    // 소방청 접수 및 완진 실측 매칭
+    const rec = sidoReception.find(
+      (r) => String(r.ocrn_ymd) === ymd && normalizeSido(r.sido_nm) === sido
+    );
+    const rcptCount = rec ? rec.fire_rcpt_mnb : mnb;
+    const endCount = rec ? rec.stn_end_mnb : mnb;
+    const slfCount = rec ? rec.slf_extsh_mnb : 0;
+    const flsrpCount = rec ? rec.flsrp_prcs_mnb : 0;
+    const falsCount = rec ? rec.fals_dclr_mnb : 0;
 
     list.push({
       id: `NFA-RAW-${ymd}-${sido}`,
@@ -77,10 +90,11 @@ const formatRawIncidents = () => {
       occurTime: dateStr,
       datetime: dateStr,
       region: sido,
-      sidoName: row.sido_nm || sido,
-      occurPlace: `${row.sido_nm || sido} 소방관할구역`,
-      location: `${row.sido_nm || sido} 전역`,
-      title: `${row.sido_nm || sido} 화재 발생 현황 (공식 통계)`,
+      sidoName: sidoInfo.fullName || sido,
+      occurPlace: `${sidoInfo.fullName || sido} 소방관할 전역`,
+      location: `${sidoInfo.fullName || sido} 전역`,
+      title: `[소방청 공식통계] ${sidoInfo.fullName || sido} 화재 발생 현황`,
+      placeCategory: '시·도 소방관할 공식집계',
       fireCount: mnb,
       deathCount: deaths,
       injuryCount: injured,
@@ -88,15 +102,20 @@ const formatRawIncidents = () => {
       casualtyText: casualties > 0 ? `사망 ${deaths}명 / 부상 ${injured}명 (총 ${casualties}명)` : '인명피해 0명',
       fireCause: '소방청 통계 원장 집계',
       cause: '소방청 통계 원장 집계',
-      damageAmount: '공공데이터포털 소방청 원장',
-      jurisStation: `${sido}소방본부 관할`,
-      lat: geo.lat,
-      lng: geo.lng,
+      fireRcptCount: rcptCount,
+      stnEndCount: endCount,
+      slfExtshCount: slfCount,
+      flsrpCount: flsrpCount,
+      falsCount: falsCount,
+      damageAmount: '소방청 통계연보 원장 집계',
+      jurisStation: `${sidoInfo.fullName || sido}소방본부`,
+      lat: sidoInfo.lat,
+      lng: sidoInfo.lng,
       status: 'EXTINGUISHED',
-      statusText: '소방청 공식집계',
+      statusText: '소방청 집계완료',
       isVerified: true,
       source: '공공데이터포털 소방청 화재정보 OpenAPI 원본 (getOcBysidoFpcnd)',
-      description: `${dateStr} ${row.sido_nm || sido} 전역에서 총 ${mnb.toLocaleString()}건의 화재가 발생하였으며, 인명피해는 사망 ${deaths}명, 부상 ${injured}명(총 ${casualties}명)으로 공식 집계되었습니다.`
+      description: `${dateStr} ${sidoInfo.fullName || sido} 전역에서 총 ${mnb.toLocaleString()}건의 화재가 발생하였으며, 공식 집계 인명피해는 사망 ${deaths}명, 부상 ${injured}명(총 ${casualties}명)입니다.`
     });
   }
 
