@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Flame, ShieldAlert, Key, Monitor, Smartphone } from 'lucide-react';
 
 import { NFA_OFFICIAL_INCIDENTS_DATABASE } from '../data/officialIncidents';
-import { formatKSTDate, getDaysAgoDate, generateLiveTodayIncidents } from '../utils/dateUtils';
+import { formatKSTDate, getDaysAgoDate } from '../utils/dateUtils';
 
 const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcMode, onTogglePcMode, onLogoDoubleClick, liveIncidents = [] }) => {
   // 실시간 흐르는 속보 텍스트 생성 (소방청 DB 및 라이브 OpenAPI 데이터 필드 정규화)
@@ -38,11 +38,8 @@ const Header = ({ isLiveApi, apiSource, onOpenApiKeyModal, latestIncident, isPcM
     const todayYMD = formatKSTDate(now);
     const yesterdayYMD = getDaysAgoDate(1, now);
 
-    // 현재 접속 시점 기준의 당일 실시간 119 속보 데이터
-    const todayLiveIncidents = generateLiveTodayIncidents(now);
-
-    // 실시간 수신 속보 + 당일 동적 119 속보 + 소방청 공식 DB 병합
-    const combined = [...liveIncidents, ...todayLiveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
+    // 실시간 수신 속보 + 소방청 공식 OpenAPI 데이터 병합
+    const combined = [...liveIncidents, ...(NFA_OFFICIAL_INCIDENTS_DATABASE || [])];
     const seen = new Set();
     const normalizedList = [];
 

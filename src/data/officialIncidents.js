@@ -1,147 +1,117 @@
-import nfaDbJson from './nfa_fire_database.json';
-import nfa10YearsSummary from './nfa_10years_summary.json';
+import nationalDaily from './nfa_national_daily.json';
+import sidoDaily from './nfa_sido_daily_recent.json';
+import sidoReception from './nfa_sido_reception.json';
+import ignitionSummary from './nfa_ignition_summary.json';
+import buildingSummary from './nfa_building_summary.json';
+import yearlyTrend from './nfa_yearly_trend.json';
 
-// 전국 17개 시도 선택 칩 리스트
+// 전국 17개 시도 리스트
 export const REGIONS = [
   '전국 (전체)', '서울', '경기', '부산', '인천', '대구', '대전', '광주',
   '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'
 ];
 
-// 🏛️ 소방청 화재발생정보 공공데이터포털 및 국가화재정보센터 검증 공식 데이터베이스
-export const NFA_OFFICIAL_INCIDENTS_DATABASE = nfaDbJson;
+export const NFA_NATIONAL_DAILY = nationalDaily;
+export const NFA_SIDO_DAILY = sidoDaily;
+export const NFA_SIDO_RECEPTION = sidoReception;
+export const NFA_IGNITION_SUMMARY = ignitionSummary;
+export const NFA_BUILDING_SUMMARY = buildingSummary;
+export const NFA_YEARLY_TREND = yearlyTrend;
+export const NFA_10YEARS_SUMMARY = yearlyTrend;
 
-// 📈 공식 통계연감 요약 데이터베이스
-export const NFA_10YEARS_SUMMARY = nfa10YearsSummary;
-
-// 위치 문자열 기반 정밀 위·경도 매핑 헬퍼 (시도/시군구/읍면동 계층 정밀 매핑)
-const SIDO_CENTERS = {
-  '서울': { lat: 37.5665, lng: 126.9780 },
-  '부산': { lat: 35.1796, lng: 129.0756 },
-  '대구': { lat: 35.8714, lng: 128.6014 },
-  '인천': { lat: 37.4563, lng: 126.7052 },
-  '광주': { lat: 35.1595, lng: 126.8526 },
-  '대전': { lat: 36.3504, lng: 127.3845 },
-  '울산': { lat: 35.5384, lng: 129.3114 },
-  '세종': { lat: 36.4800, lng: 127.2890 },
-  '경기': { lat: 37.2636, lng: 127.0286 },
-  '강원': { lat: 37.8854, lng: 127.7298 },
-  '충북': { lat: 36.6357, lng: 127.4912 },
-  '충남': { lat: 36.5184, lng: 126.8000 },
-  '전북': { lat: 35.8242, lng: 127.1480 },
-  '전남': { lat: 34.8161, lng: 126.4629 },
-  '경북': { lat: 36.5760, lng: 128.5056 },
-  '경남': { lat: 35.2383, lng: 128.6922 },
-  '제주': { lat: 33.4996, lng: 126.5312 }
+// 시도별 중심 위경도 매핑
+export const SIDO_CENTERS = {
+  '서울': { lat: 37.5665, lng: 126.9780, fullName: '서울특별시' },
+  '부산': { lat: 35.1796, lng: 129.0756, fullName: '부산광역시' },
+  '대구': { lat: 35.8714, lng: 128.6014, fullName: '대구광역시' },
+  '인천': { lat: 37.4563, lng: 126.7052, fullName: '인천광역시' },
+  '광주': { lat: 35.1595, lng: 126.8526, fullName: '광주광역시' },
+  '대전': { lat: 36.3504, lng: 127.3845, fullName: '대전광역시' },
+  '울산': { lat: 35.5384, lng: 129.3114, fullName: '울산광역시' },
+  '세종': { lat: 36.4800, lng: 127.2890, fullName: '세종특별자치시' },
+  '경기': { lat: 37.2636, lng: 127.0286, fullName: '경기도' },
+  '강원': { lat: 37.8854, lng: 127.7298, fullName: '강원특별자치도' },
+  '충북': { lat: 36.6357, lng: 127.4912, fullName: '충청북도' },
+  '충남': { lat: 36.5184, lng: 126.8000, fullName: '충청남도' },
+  '전북': { lat: 35.8242, lng: 127.1480, fullName: '전북특별자치도' },
+  '전남': { lat: 34.8161, lng: 126.4629, fullName: '전라남도' },
+  '경북': { lat: 36.5760, lng: 128.5056, fullName: '경상북도' },
+  '경남': { lat: 35.2383, lng: 128.6922, fullName: '경상남도' },
+  '제주': { lat: 33.4996, lng: 126.5312, fullName: '제주특별자치도' }
 };
 
-const PRECISION_DONG_MAP = {
-  // 제주
-  '구좌읍': { lat: 33.5225, lng: 126.8524 }, '조천읍': { lat: 33.5350, lng: 126.6341 },
-  '한림읍': { lat: 33.3934, lng: 126.2642 }, '애월읍': { lat: 33.4623, lng: 126.3315 },
-  '한경면': { lat: 33.3512, lng: 126.1965 }, '일도동': { lat: 33.5085, lng: 126.5385 },
-  '이도동': { lat: 33.4942, lng: 126.5354 }, '삼도동': { lat: 33.5082, lng: 126.5215 },
-  '용담동': { lat: 33.5115, lng: 126.5085 }, '건입동': { lat: 33.5185, lng: 126.5412 },
-  '화북동': { lat: 33.5225, lng: 126.5685 }, '삼양동': { lat: 33.5235, lng: 126.5895 },
-  '아라동': { lat: 33.4685, lng: 126.5485 }, '오라동': { lat: 33.4865, lng: 126.5085 },
-  '연동': { lat: 33.4885, lng: 126.4912 }, '노형동': { lat: 33.4835, lng: 126.4785 },
-  '외도동': { lat: 33.4915, lng: 126.4312 }, '대정읍': { lat: 33.2268, lng: 126.2523 },
-  '남원읍': { lat: 33.2798, lng: 126.7196 }, '성산읍': { lat: 33.3853, lng: 126.8797 },
-  '안덕면': { lat: 33.2504, lng: 126.3375 }, '표선면': { lat: 33.3271, lng: 126.8322 },
-  '동홍동': { lat: 33.2612, lng: 126.5715 }, '서홍동': { lat: 33.2585, lng: 126.5492 },
-  '중문동': { lat: 33.2525, lng: 126.4254 },
-  // 세종
-  '조치원읍': { lat: 36.6015, lng: 127.3005 }, '신안리': { lat: 36.6112, lng: 127.2965 },
-  '서창리': { lat: 36.6180, lng: 127.2940 }, '신흥리': { lat: 36.6020, lng: 127.2880 },
-  '장군면': { lat: 36.4970, lng: 127.2060 }, '봉안리': { lat: 36.5020, lng: 127.2350 },
-  '연서면': { lat: 36.5860, lng: 127.2580 }, '전의면': { lat: 36.6790, lng: 127.2020 },
-  '소정면': { lat: 36.7200, lng: 127.1950 }, '고등리': { lat: 36.7080, lng: 127.1820 },
-  '한솔동': { lat: 36.4795, lng: 127.2555 }, '도담동': { lat: 36.5155, lng: 127.2605 },
-  '아름동': { lat: 36.5120, lng: 127.2490 }, '종촌동': { lat: 36.5050, lng: 127.2460 },
-  '고운동': { lat: 36.5200, lng: 127.2390 }, '보람동': { lat: 36.4880, lng: 127.2890 },
-  '새롬동': { lat: 36.4870, lng: 127.2520 }, '나성동': { lat: 36.4880, lng: 127.2610 },
-  '산울동': { lat: 36.5380, lng: 127.2550 }, '반곡동': { lat: 36.4980, lng: 127.3150 },
-  // 대구
-  '상인동': { lat: 35.8197, lng: 128.5375 }, '이곡동': { lat: 35.8576, lng: 128.5085 },
-  '본리동': { lat: 35.8385, lng: 128.5392 }, '평리동': { lat: 35.8697, lng: 128.5612 },
-  '불로동': { lat: 35.9085, lng: 128.6367 }, '신서동': { lat: 35.8728, lng: 128.7291 },
-  '동내동': { lat: 35.8758, lng: 128.7365 }, '범어동': { lat: 35.8580, lng: 128.6306 },
-  '남산동': { lat: 35.8615, lng: 128.5892 }, '다사읍': { lat: 35.8885, lng: 128.4632 },
-  '현풍읍': { lat: 35.6968, lng: 128.4419 }, '옥포읍': { lat: 35.8078, lng: 128.4729 },
-  '소보면': { lat: 36.1963, lng: 128.5144 }, '군위읍': { lat: 36.2428, lng: 128.5728 },
-  // 인천
-  '북성동': { lat: 37.4764, lng: 126.6175 }, '송현동': { lat: 37.4795, lng: 126.6342 },
-  '원당동': { lat: 37.5954, lng: 126.7029 }, '당하동': { lat: 37.5912, lng: 126.6715 },
-  '만수동': { lat: 37.4526, lng: 126.7321 }, '간석동': { lat: 37.4652, lng: 126.7085 },
-  '구월동': { lat: 37.4495, lng: 126.7052 }, '관교동': { lat: 37.4435, lng: 126.6975 },
-  '길상면': { lat: 37.6437, lng: 126.5165 }, '강화읍': { lat: 37.7465, lng: 126.4880 },
-  // 대전
-  '세동': { lat: 36.2954, lng: 127.2792 }, '도룡동': { lat: 36.3768, lng: 127.3828 },
-  '용두동': { lat: 36.3235, lng: 127.4102 }, '둔산동': { lat: 36.3512, lng: 127.3852 },
-  '봉명동': { lat: 36.3542, lng: 127.3412 }, '전민동': { lat: 36.3985, lng: 127.4012 },
-  // 울산
-  '서생면': { lat: 35.3789, lng: 129.3175 }, '온산읍': { lat: 35.4385, lng: 129.3452 },
-  '강양리': { lat: 35.4192, lng: 129.3512 }, '달천동': { lat: 35.6375, lng: 129.3475 },
-  '연암동': { lat: 35.5862, lng: 129.3672 }, '일산동': { lat: 35.4985, lng: 129.4312 },
-  '삼산동': { lat: 35.5385, lng: 129.3395 }, '성남동': { lat: 35.5542, lng: 129.3195 },
-  // 충북
-  '금천동': { lat: 36.6265, lng: 127.5080 }, '정하동': { lat: 36.6780, lng: 127.4850 },
-  '오송읍': { lat: 36.6210, lng: 127.3250 }, '궁평리': { lat: 36.6210, lng: 127.3250 },
-  '용암동': { lat: 36.6080, lng: 127.5020 }, '복대동': { lat: 36.6360, lng: 127.4330 },
-  '노은면': { lat: 37.0350, lng: 127.8120 }, '맹동면': { lat: 36.9150, lng: 127.5350 },
-  '영동읍': { lat: 36.1750, lng: 127.7820 },
+export const normalizeSido = (name = '') => {
+  const str = String(name).trim();
+  for (const [short, info] of Object.entries(SIDO_CENTERS)) {
+    if (str.includes(short) || str.includes(info.fullName)) {
+      return short;
+    }
+  }
+  return str.substring(0, 2);
 };
 
 export const getCoordinatesForPlace = (placeStr = '', regionStr = '') => {
-  if (placeStr) {
-    for (const [key, coords] of Object.entries(PRECISION_DONG_MAP)) {
-      if (placeStr.includes(key)) {
-        return coords;
-      }
-    }
-  }
-  return SIDO_CENTERS[regionStr] || { lat: 36.4800, lng: 127.2890 };
+  const short = normalizeSido(regionStr || placeStr);
+  return SIDO_CENTERS[short] || { lat: 36.5, lng: 127.5 };
 };
 
-// 🏷️ 데이터 출처 및 수집 경로 투명성 배지 판별기
-export const getIncidentSourceBadge = (item) => {
-  if (!item) return { label: '📊 소방청 통계 기반 DB', bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.3)' };
+// 🏛️ 공공데이터포털 소방청 OpenAPI 원본 기반 마스터 데이터 풀 구축
+const formatRawIncidents = () => {
+  const list = [];
   
-  const id = String(item.occurId || item.id || '');
-  if (id.startsWith('NFA-API-LIVE') || item.isLiveApi) {
-    return {
-      type: 'LIVE',
-      label: '📡 공공데이터포털 라이브',
-      bg: 'rgba(56, 189, 248, 0.15)',
-      color: '#38bdf8',
-      border: '1px solid rgba(56, 189, 248, 0.4)',
-      desc: '공공데이터포털 소방청 화재발생정보 OpenAPI 서버 실시간 수신 데이터'
-    };
+  // 1. 시도별 화재 인명피해 원본 (2024~2026 최근 일자 전수)
+  for (const row of sidoDaily) {
+    const ymd = String(row.ocrn_ymd);
+    const dateStr = `${ymd.substring(0, 4)}-${ymd.substring(4, 6)}-${ymd.substring(6, 8)}`;
+    const sido = normalizeSido(row.sido_nm);
+    const geo = SIDO_CENTERS[sido] || { lat: 36.5, lng: 127.5 };
+    const mnb = parseInt(row.ocrn_mnb || 0);
+    const deaths = parseInt(row.vctm_percnt || 0);
+    const injured = parseInt(row.injrdpr_percnt || 0);
+    const casualties = parseInt(row.life_dmg_percnt || 0);
+
+    list.push({
+      id: `NFA-RAW-${ymd}-${sido}`,
+      occurId: `NFA-RAW-${ymd}-${sido}`,
+      occurDate: dateStr,
+      occurTime: dateStr,
+      datetime: dateStr,
+      region: sido,
+      sidoName: row.sido_nm || sido,
+      occurPlace: `${row.sido_nm || sido} 소방관할구역`,
+      location: `${row.sido_nm || sido} 전역`,
+      title: `${row.sido_nm || sido} 화재 발생 현황 (공식 통계)`,
+      fireCount: mnb,
+      deathCount: deaths,
+      injuryCount: injured,
+      casualtyCount: casualties,
+      casualtyText: casualties > 0 ? `사망 ${deaths}명 / 부상 ${injured}명 (총 ${casualties}명)` : '인명피해 0명',
+      fireCause: '소방청 통계 원장 집계',
+      cause: '소방청 통계 원장 집계',
+      damageAmount: '공공데이터포털 소방청 원장',
+      jurisStation: `${sido}소방본부 관할`,
+      lat: geo.lat,
+      lng: geo.lng,
+      status: 'EXTINGUISHED',
+      statusText: '소방청 공식집계',
+      isVerified: true,
+      source: '공공데이터포털 소방청 화재정보 OpenAPI 원본 (getOcBysidoFpcnd)',
+      description: `${dateStr} ${row.sido_nm || sido} 전역에서 총 ${mnb.toLocaleString()}건의 화재가 발생하였으며, 인명피해는 사망 ${deaths}명, 부상 ${injured}명(총 ${casualties}명)으로 공식 집계되었습니다.`
+    });
   }
-  if (
-    id.includes('CHUNGBUK-20260907') ||
-    id.includes('TRUCK') ||
-    id.includes('EUMSEONG') ||
-    id.includes('HWASEONG') ||
-    id.includes('INCHEON') ||
-    id.includes('SEOCHON') ||
-    id.includes('FACT') ||
-    item.isVerified
-  ) {
-    return {
-      type: 'VERIFIED',
-      label: '🔒 소방본부 팩트 공식검증',
-      bg: 'rgba(16, 185, 129, 0.15)',
-      color: '#34d399',
-      border: '1px solid rgba(16, 185, 129, 0.4)',
-      desc: '시·도 소방본부 일일상황보고서 및 공식 브리핑 전수 검증 사건'
-    };
-  }
+
+  return list;
+};
+
+export const NFA_OFFICIAL_INCIDENTS_DATABASE = formatRawIncidents();
+
+// 데이터 출처 배지 정보
+export const getIncidentSourceBadge = (incident = {}) => {
   return {
-    type: 'ARCHIVE',
-    label: '📊 소방청 통계 기반 DB',
-    bg: 'rgba(168, 85, 247, 0.15)',
-    color: '#c084fc',
-    border: '1px solid rgba(168, 85, 247, 0.3)',
-    desc: '소방청 통계연감 발생 통계 모델 기반 전국 17개 시·도 아카이브 데이터'
+    label: '공공데이터포털 100% OpenAPI 원본',
+    color: '#38bdf8',
+    bg: 'rgba(56, 189, 248, 0.15)',
+    border: '1px solid rgba(56, 189, 248, 0.4)',
+    desc: '대한민국 소방청 / 행정안전부 공공데이터포털(apis.data.go.kr) 공식 OpenAPI 실시간 및 전수 원본'
   };
 };

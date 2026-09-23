@@ -1,64 +1,67 @@
-import React from 'react';
-import { X, Siren, MapPin, Clock, AlertTriangle, Building, Users, ShieldAlert, Database } from 'lucide-react';
-import { getIncidentSourceBadge } from '../data/officialIncidents';
+import React, { useMemo } from 'react';
+import { X, MapPin, Clock, Building, Users, ShieldAlert, Database, Flame, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
+import { getIncidentSourceBadge, NFA_SIDO_RECEPTION, NFA_NATIONAL_DAILY, normalizeSido } from '../data/officialIncidents';
 
 const FireDetailModal = ({ incident, onClose }) => {
   if (!incident) return null;
 
   const sourceBadge = getIncidentSourceBadge(incident);
 
-  // 안전 데이터 파서 (FireMap 핀 데이터와 공공데이터 객체 100% 안심 통합 호환)
-  const title = incident.title || incident.occurPlace || '실시간 화재 신고 현황';
-  const fireLevel = incident.fireLevel || incident.statusText || '화재 신고';
-  const locationName = incident.locationName || incident.occurPlace || '상세 장소 확인 중';
-  const occurredAt = incident.occurredAt || incident.occurTime || incident.occurDate || '2026-08-28 21:00';
-  const stationName = incident.stationName || incident.jurisStation || '관할 소방서 출동 중';
-  const cause = incident.cause || incident.fireCause || '119 신고 접수 조사 중';
-  
-  // 인명피해 파서
-  const deadCount = incident.casualties?.dead ?? incident.deathCount ?? 0;
-  const injuredCount = incident.casualties?.injured ?? incident.injuryCount ?? 0;
-  const casualtyText = incident.casualtyText || `사망 ${deadCount}명 / 부상 ${injuredCount}명`;
-  const estDamage = incident.estDamage || incident.damageText || incident.damageAmount || '약 3,500만원';
-  
-  // 상태별 현실적인 현장 조치 브리핑 문구 지능형 생성
-  const isDispatch = fireLevel.includes('출동');
-  const isExtinguishing = fireLevel.includes('진화');
-  
-  const defaultDesc = isDispatch
-    ? `현재 ${stationName} 소방대원 및 소방차가 긴급 출동 중입니다. 인근 도로는 소방차 길 터주기에 적극 협조해 주시기 바랍니다.`
-    : isExtinguishing
-    ? `현재 ${stationName} 소방대원이 ${locationName} 현장에서 긴급 진화 작업을 펼치고 있습니다. 주변 주민들은 연기 흡입에 유의하시고 안전한 곳으로 대피하시기 바랍니다.`
-    : `화재가 신속히 초진 및 완진되었으며, ${stationName} 화재조사팀에서 현장 잔불 감시와 함께 정확한 발화 원인 및 피해 규모를 정밀 조사하고 있습니다.`;
+  const occurDate = incident.occurDate || incident.occurTime || incident.datetime || '';
+  const ymd = occurDate.replace(/-/g, '').substring(0, 8);
+  const region = incident.region || normalizeSido(incident.occurPlace || '');
+  const title = incident.title || `${region} 화재 발생 공식 통계`;
+  const fireCount = incident.fireCount ?? incident.ocrn_mnb ?? 0;
+  const deadCount = incident.deathCount ?? incident.vctm_percnt ?? 0;
+  const injuredCount = incident.injuryCount ?? incident.injrdpr_percnt ?? 0;
+  const totalCasualties = incident.casualtyCount ?? (deadCount + injuredCount);
 
-  const description = incident.description || defaultDesc;
+  // 시도별 화재접수 및 출동 통계 매칭 (sido_reception 원본)
+  const receptionData = useMemo(() => {
+    if (!ymd) return null;
+    return NFA_SIDO_RECEPTION.find(
+      (item) => String(item.ocrn_ymd) === ymd && normalizeSido(item.sido_nm) === region
+    );
+  }, [ymd, region]);
+
+  // 전국 일별 종합 통계 매칭 (national_summary 원본)
+  const nationalData = useMemo(() => {
+    if (!ymd) return null;
+    return NFA_NATIONAL_DAILY.find((item) => String(item.ocrn_ymd) === ymd);
+  }, [ymd]);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-handle" />
 
+        {/* 헤더 영역 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <span
                 style={{
-                  background: 'rgba(249, 115, 22, 0.15)',
-                  color: '#f97316',
-                  padding: '2px 8px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  padding: '3px 8px',
                   borderRadius: 4,
                   fontSize: '0.72rem',
                   fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
                 }}
               >
-                {fireLevel}
+                <Flame size={12} />
+                공공데이터포털 실측치
               </span>
               <span
                 style={{
                   background: sourceBadge.bg,
                   color: sourceBadge.color,
                   border: sourceBadge.border,
-                  padding: '2px 8px',
+                  padding: '3px 8px',
                   borderRadius: 4,
                   fontSize: '0.72rem',
                   fontWeight: 700,
@@ -67,88 +70,168 @@ const FireDetailModal = ({ incident, onClose }) => {
                 {sourceBadge.label}
               </span>
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginTop: 6, color: '#f8fafc' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginTop: 8, color: '#f8fafc' }}>
               {title}
             </h3>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: 'none',
+              background: 'rgba(255, 255, 255, 0.08)',
               border: 'none',
+              borderRadius: '50%',
               color: '#94a3b8',
               cursor: 'pointer',
-              padding: 4,
+              padding: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.82rem', color: '#cbd5e1', marginTop: 10 }}>
+        {/* 기본 메타 정보 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.82rem', color: '#cbd5e1', marginTop: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <MapPin size={16} style={{ color: '#f97316' }} />
-            <span>위치: {locationName}</span>
+            <span><strong>지역:</strong> {incident.occurPlace || `${region} 소방관할구역`}</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Clock size={16} style={{ color: '#38bdf8' }} />
-            <span>신고/발생 시각: {occurredAt}</span>
+            <span><strong>발생/집계 일자:</strong> {occurDate}</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Building size={16} style={{ color: '#a855f7' }} />
-            <span>관할 소방서: {stationName}</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertTriangle size={16} style={{ color: '#f59e0b' }} />
-            <span>추정 원인: {cause}</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={16} style={{ color: '#ef4444' }} />
-            <span>
-              인명 피해: {casualtyText} (추정 피해액: {estDamage})
-            </span>
+            <span><strong>관할 소방본부:</strong> {incident.jurisStation || `${region}소방본부`}</span>
           </div>
         </div>
 
+        {/* 1. 공식 화재 및 인명피해 수치 카드 */}
         <div
           style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid var(--border-color)',
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: 12,
             padding: 12,
-            marginTop: 10,
+            marginTop: 12,
           }}
         >
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f97316', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <ShieldAlert size={14} /> 현장 대피 및 조치 상황
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#38bdf8', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Users size={14} /> 소방청 공식 인명피해 및 발생 집계
           </div>
-          <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: 1.5 }}>
-            {description}
-          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: 8, borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>화재 발생건수</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f8fafc', marginTop: 2 }}>
+                {fireCount > 0 ? `${fireCount.toLocaleString()}건` : '-'}
+              </div>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.08)', padding: 8, borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#fca5a5' }}>사망자 수</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#ef4444', marginTop: 2 }}>
+                {deadCount}명
+              </div>
+            </div>
+            <div style={{ background: 'rgba(249, 115, 22, 0.08)', padding: 8, borderRadius: 8, border: '1px solid rgba(249, 115, 22, 0.2)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#fdba74' }}>부상자 수</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f97316', marginTop: 2 }}>
+                {injuredCount}명
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* 데이터 출처 및 수집 경로 투명성 정보 */}
+        {/* 2. 119 출동 및 접수 상세 통계 (OpenAPI getOcBysidoFireSmrzPcnd) */}
+        {receptionData && (
+          <div
+            style={{
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: 12,
+              padding: 12,
+              marginTop: 10,
+            }}
+          >
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#a855f7', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <ShieldAlert size={14} /> 119 상황실 접수 및 출동 처리 현황
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, fontSize: '0.75rem', textAlign: 'center' }}>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>119 접수: </span>
+                <strong style={{ color: '#e2e8f0' }}>{receptionData.fire_rcpt_mnb}건</strong>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>완진 종료: </span>
+                <strong style={{ color: '#22c55e' }}>{receptionData.stn_end_mnb}건</strong>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>자체 진화: </span>
+                <strong style={{ color: '#38bdf8' }}>{receptionData.slf_extsh_mnb}건</strong>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>진화 진행: </span>
+                <strong style={{ color: '#f59e0b' }}>{receptionData.fire_prog_mnb}건</strong>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>오인 출동: </span>
+                <strong style={{ color: '#94a3b8' }}>{receptionData.flsrp_prcs_mnb}건</strong>
+              </div>
+              <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: 6, borderRadius: 6 }}>
+                <span style={{ color: '#94a3b8' }}>허위 신고: </span>
+                <strong style={{ color: '#94a3b8' }}>{receptionData.fals_dclr_mnb}건</strong>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. 전국 당일 집계 요약 (있는 경우) */}
+        {nationalData && (
+          <div
+            style={{
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid rgba(255, 255, 255, 0.06)',
+              borderRadius: 12,
+              padding: 10,
+              marginTop: 10,
+              fontSize: '0.78rem',
+              color: '#94a3b8'
+            }}
+          >
+            <div style={{ fontWeight: 700, color: '#e2e8f0', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <FileText size={13} /> {occurDate} 전국 화재 통계 요약
+            </div>
+            <div>
+              전국 총 {nationalData.ocrn_mnb?.toLocaleString()}건 발생 | 
+              사망 {nationalData.vctm_percnt}명, 부상 {nationalData.injrdpr_percnt}명 | 
+              재산피해 약 {(nationalData.prpt_dmg_sbtt_amt / 1000)?.toLocaleString()}만원
+            </div>
+          </div>
+        )}
+
+        {/* 4. 데이터 출처 및 무가공 원본 안내 */}
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(15, 23, 42, 0.85)',
+            border: '1px solid rgba(56, 189, 248, 0.25)',
             borderRadius: 12,
             padding: 10,
-            marginTop: 8,
+            marginTop: 10,
             fontSize: '0.75rem',
             color: '#94a3b8'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, color: sourceBadge.color, fontWeight: 700 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, color: '#38bdf8', fontWeight: 700 }}>
             <Database size={13} />
-            <span>데이터 수집 출처: {sourceBadge.label}</span>
+            <span>데이터 수집 출처: 100% 공공데이터포털 OpenAPI 실측치</span>
           </div>
-          <div style={{ lineHeight: 1.4 }}>
-            {sourceBadge.desc} (사건 식별 ID: <code style={{ color: '#e2e8f0' }}>{incident.occurId || incident.id || 'NFA-AUTO'}</code>)
+          <div style={{ lineHeight: 1.4, color: '#94a3b8' }}>
+            본 데이터는 소방청 화재정보서비스(<code style={{ color: '#e2e8f0' }}>FireInformationService</code>) API 서버의 무가공 원본 통계 수치입니다. (모의/가상 데이터 0%)
           </div>
         </div>
 
