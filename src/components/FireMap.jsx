@@ -344,33 +344,33 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
   const periodOptions = [
     { id: 'TODAY', label: '당일 (오늘)' },
     { id: '7DAYS', label: '최근 7일' },
-    { id: '1MONTH', label: '최근 1개월 (200핀)' },
-    { id: '3MONTHS', label: '최근 3개월 (400핀)' },
-    { id: '6MONTHS', label: '최근 6개월 (800핀)' },
-    { id: '1YEAR', label: '최근 1년 (1600핀)' },
-    { id: '3YEARS', label: '최근 3년 (3000핀)' },
-    { id: '5YEARS', label: '최근 5년 (4000핀)' },
-    { id: '10YEARS', label: '최근 10년 (6000핀)' },
-    { id: '20YEARS', label: '최근 20년 (8000핀)' },
-    { id: 'ALL', label: '전체 기록 (8000핀)' },
+    { id: '1MONTH', label: '최근 1개월 (100핀)' },
+    { id: '3MONTHS', label: '최근 3개월 (200핀)' },
+    { id: '6MONTHS', label: '최근 6개월 (300핀)' },
+    { id: '1YEAR', label: '최근 1년 (400핀)' },
+    { id: '3YEARS', label: '최근 3년 (500핀)' },
+    { id: '5YEARS', label: '최근 5년 (600핀)' },
+    { id: '10YEARS', label: '최근 10년 (700핀)' },
+    { id: '20YEARS', label: '최근 20년 (800핀)' },
+    { id: 'ALL', label: '전체 기록 (800핀)' },
     { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
   ];
 
-  // 기간별 단계적 마커 표출 (1개월: 200건, 3개월: 400건, 6개월: 800건, 1년: 1600건, 3년: 3000건, 5년: 4000건, 10년: 6000건, 20년/전체: 8000건)
+  // 기간별 단계적 마커 표출 (1개월: 100건, 3개월: 200건, 6개월: 300건, 1년: 400건, 3년: 500건, 5년: 600건, 10년: 700건, 20년/전체: 800건)
   const displayMarkers = useMemo(() => {
     if (periodFilter === 'TODAY' || periodFilter === '3DAYS' || periodFilter === '7DAYS' || periodFilter === 'CUSTOM') {
       return filteredIncidents;
     }
 
-    let targetCount = 200;
-    if (periodFilter === '1MONTH') targetCount = 200;
-    else if (periodFilter === '3MONTHS') targetCount = 400;
-    else if (periodFilter === '6MONTHS') targetCount = 800;
-    else if (periodFilter === '1YEAR') targetCount = 1600;
-    else if (periodFilter === '3YEARS') targetCount = 3000;
-    else if (periodFilter === '5YEARS') targetCount = 4000;
-    else if (periodFilter === '10YEARS') targetCount = 6000;
-    else if (periodFilter === '20YEARS' || periodFilter === 'ALL') targetCount = 8000;
+    let targetCount = 100;
+    if (periodFilter === '1MONTH') targetCount = 100;
+    else if (periodFilter === '3MONTHS') targetCount = 200;
+    else if (periodFilter === '6MONTHS') targetCount = 300;
+    else if (periodFilter === '1YEAR') targetCount = 400;
+    else if (periodFilter === '3YEARS') targetCount = 500;
+    else if (periodFilter === '5YEARS') targetCount = 600;
+    else if (periodFilter === '10YEARS') targetCount = 700;
+    else if (periodFilter === '20YEARS' || periodFilter === 'ALL') targetCount = 800;
 
     if (filteredIncidents.length <= targetCount) {
       return filteredIncidents;
