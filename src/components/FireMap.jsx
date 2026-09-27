@@ -302,8 +302,17 @@ const matchSido = (itemRegion = '', targetRegion = '') => {
 
   // 하단 3개 타일 건수 (소방청 191,510건 전수 CSV 및 공식 팩트 실시간 산출)
   const regionTileCounts = useMemo(() => {
-    const dispatching = regionIncidents.filter((inc) => inc.status === 'DISPATCHING').length;
-    const extinguishing = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHING').length;
+    // 실시간 출동/진화중 상태는 현재 실시간 관제 시점(당일, 3일, 7일, 1개월) 또는 오늘 날짜 조회 시에만 표시
+    const isLivePeriod = periodFilter === 'TODAY' || periodFilter === '3DAYS' || periodFilter === '7DAYS' || periodFilter === '1MONTH';
+    const isTodayCustom = periodFilter === 'CUSTOM' && (!customSelectedDate || customSelectedDate === todayStr);
+    const showLiveProgression = isLivePeriod || isTodayCustom;
+
+    const dispatching = showLiveProgression
+      ? regionIncidents.filter((inc) => inc.status === 'DISPATCHING').length
+      : 0;
+    const extinguishing = showLiveProgression
+      ? regionIncidents.filter((inc) => inc.status === 'EXTINGUISHING').length
+      : 0;
 
     const csvStats = NFA_CSV_STATS || {};
     const yearly = csvStats.yearly || {};
@@ -354,7 +363,7 @@ const matchSido = (itemRegion = '', targetRegion = '') => {
       extinguished,
       total: totalCount
     };
-  }, [regionIncidents, periodFilter, selectedRegion]);
+  }, [regionIncidents, periodFilter, selectedRegion, customSelectedDate, todayStr]);
 
   const regionTabs = [
     { id: 'ALL', name: '전체' },
