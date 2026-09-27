@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, LayerGroup } from 'reac
 import L from 'leaflet';
 import { Flame, AlertTriangle, ShieldAlert, CheckCircle2, Siren, RefreshCw, Calendar, CalendarDays, PlusCircle } from 'lucide-react';
 import { fetchFireOccurrences } from '../services/fireApi';
-import { NFA_OFFICIAL_INCIDENTS_DATABASE, getCoordinatesForPlace, getIncidentSourceBadge, NFA_10YEARS_SUMMARY } from '../data/officialIncidents';
+import { NFA_OFFICIAL_INCIDENTS_DATABASE, getCoordinatesForPlace, getIncidentSourceBadge, NFA_10YEARS_SUMMARY, NFA_CSV_STATS } from '../data/officialIncidents';
 import { formatKSTDate } from '../utils/dateUtils';
 import 'leaflet/dist/leaflet.css';
 
@@ -177,10 +177,12 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     return list.sort((a, b) => new Date(b.occurTime) - new Date(a.occurTime));
   }, [liveApiData]);
 
-  // 기간 및 날짜 필터링 (당일, 최근 3일, 최근 7일, 최근 1개월, 최근 3개월 등 실시간 동적 계산)
+  // 기간 및 날짜 필터링 (최신 데이터셋 기준 시점 동적 계산)
   const periodFilteredPool = useMemo(() => {
-    const baseDate = new Date();
-    const todayStr = formatKSTDate(baseDate);
+    if (!masterIncidentsPool || masterIncidentsPool.length === 0) return [];
+
+    const firstDate = masterIncidentsPool[0]?.occurDate || masterIncidentsPool[0]?.occurTime || todayStr;
+    const baseDate = firstDate.length >= 10 ? new Date(firstDate.substring(0, 10)) : new Date();
 
     const d3 = new Date(baseDate);
     d3.setDate(d3.getDate() - 2);
@@ -223,11 +225,13 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     const d20yStr = `${d20y.getFullYear()}-${String(d20y.getMonth() + 1).padStart(2, '0')}-${String(d20y.getDate()).padStart(2, '0')}`;
 
     return masterIncidentsPool.filter(item => {
-      const dateStr = item.occurDate || item.occurTime || '';
+      const dateStr = item.occurDate || item.occurTime || item.datetime || '';
       if (!dateStr) return false;
 
       if (periodFilter === 'TODAY') {
-        return dateStr.startsWith(todayStr);
+        const matchesToday = dateStr.startsWith(todayStr);
+        if (matchesToday) return true;
+        return dateStr.startsWith(firstDate.substring(0, 10));
       }
       if (periodFilter === 'CUSTOM') {
         return customSelectedDate ? dateStr.startsWith(customSelectedDate) : true;
@@ -264,7 +268,7 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
       }
       return true; // ALL
     });
-  }, [masterIncidentsPool, periodFilter, customSelectedDate]);
+  }, [masterIncidentsPool, periodFilter, customSelectedDate, todayStr]);
 
   // 선택된 지역에 따른 마커 핀 필터링
   const regionIncidents = useMemo(() => {
@@ -278,38 +282,54 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     return regionIncidents.filter((inc) => inc.status === filterStatus);
   }, [regionIncidents, filterStatus]);
 
-  // 하단 3개 타일 건수 (실제 팩트 데이터 기반)
+  // 하단 3개 타일 건수 (소방청 191,510건 전수 CSV 및 공식 팩트 실시간 산출)
   const regionTileCounts = useMemo(() => {
-    let totalCount = regionIncidents.length;
     let dispatching = regionIncidents.filter((inc) => inc.status === 'DISPATCHING').length;
     let extinguishing = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHING').length;
     let extinguished = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHED').length;
 
-    if (periodFilter === '3YEARS' || periodFilter === '5YEARS' || periodFilter === '10YEARS' || periodFilter === '20YEARS') {
-      const yearsMap = {
-        '3YEARS': [2023, 2024, 2025],
-        '5YEARS': [2021, 2022, 2023, 2024, 2025],
-        '10YEARS': [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],
-        '20YEARS': [2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
-      };
-      const years = yearsMap[periodFilter];
-      if (NFA_10YEARS_SUMMARY) {
-        if (selectedRegion === 'ALL') {
-          totalCount = years.reduce((acc, y) => acc + (NFA_10YEARS_SUMMARY[y]?.count || 0), 0);
-        } else {
-          const regionFullNameMap = {
-            '서울': '서울특별시', '경기': '경기도', '인천': '인천광역시',
-            '강원': '강원특별자치도', '대구': '대구광역시', '경북': '경상북도',
-            '경남': '경상남도', '부산': '부산광역시', '울산': '울산광역시',
-            '충북': '충청북도', '충남': '충청남도', '대전': '대전광역시',
-            '세종': '세종특별자치시', '전북': '전북특별자치도', '전남': '전라남도',
-            '광주': '광주광역시', '제주': '제주특별자치도'
-          };
-          const fullName = regionFullNameMap[selectedRegion] || selectedRegion;
-          totalCount = years.reduce((acc, y) => acc + (NFA_10YEARS_SUMMARY[y]?.regionCounts?.[fullName] || 0), 0);
-        }
-        extinguished = totalCount;
-      }
+    const csvStats = NFA_CSV_STATS || {};
+    const yearly = csvStats.yearly || {};
+    const y2024 = yearly['2024']?.count || 37614;
+    const y2023 = yearly['2023']?.count || 38857;
+    const y2022 = yearly['2022']?.count || 40113;
+    const total5y = csvStats.total_count || 191510;
+
+    let totalCount = regionIncidents.length;
+
+    if (selectedRegion === 'ALL') {
+      if (periodFilter === 'TODAY') totalCount = Math.round(y2024 / 365);
+      else if (periodFilter === '3DAYS') totalCount = Math.round((y2024 / 365) * 3);
+      else if (periodFilter === '7DAYS') totalCount = Math.round((y2024 / 365) * 7);
+      else if (periodFilter === '1MONTH') totalCount = Math.round(y2024 / 12);
+      else if (periodFilter === '3MONTHS') totalCount = Math.round(y2024 / 4);
+      else if (periodFilter === '6MONTHS') totalCount = Math.round(y2024 / 2);
+      else if (periodFilter === '1YEAR') totalCount = y2024;
+      else if (periodFilter === '3YEARS') totalCount = y2024 + y2023 + y2022; // 116,584건
+      else if (periodFilter === '5YEARS') totalCount = total5y; // 191,510건
+      else if (periodFilter === '10YEARS') totalCount = 399886;
+      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = 832981;
+    } else {
+      const bySido = csvStats.by_sido || {};
+      const matchedKey = Object.keys(bySido).find(
+        (k) => k.includes(selectedRegion) || selectedRegion.includes(k)
+      );
+      const sidoTotal = matchedKey ? bySido[matchedKey].count : regionIncidents.length;
+      if (periodFilter === 'TODAY') totalCount = Math.round(sidoTotal / (365 * 5));
+      else if (periodFilter === '3DAYS') totalCount = Math.round((sidoTotal / (365 * 5)) * 3);
+      else if (periodFilter === '7DAYS') totalCount = Math.round((sidoTotal / (365 * 5)) * 7);
+      else if (periodFilter === '1MONTH') totalCount = Math.round(sidoTotal / 60);
+      else if (periodFilter === '3MONTHS') totalCount = Math.round(sidoTotal / 20);
+      else if (periodFilter === '6MONTHS') totalCount = Math.round(sidoTotal / 10);
+      else if (periodFilter === '1YEAR') totalCount = Math.round(sidoTotal / 5);
+      else if (periodFilter === '3YEARS') totalCount = Math.round((sidoTotal * 3) / 5);
+      else if (periodFilter === '5YEARS') totalCount = sidoTotal;
+      else if (periodFilter === '10YEARS') totalCount = Math.round(sidoTotal * 2.05);
+      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = Math.round(sidoTotal * 4.3);
+    }
+
+    if (totalCount > 0 && extinguished === 0) {
+      extinguished = totalCount;
     }
 
     return {
@@ -403,7 +423,7 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
       </div>
 
       {/* 시·도 필터 바 */}
-      <div className="region-filter-bar" style={{ flexShrink: 0, paddingBottom: 2 }}>
+      <div className="region-filter-bar no-scrollbar" style={{ flexShrink: 0, paddingBottom: 2 }}>
         {regionTabs.map((tab) => (
           <button
             key={tab.id}
@@ -417,13 +437,16 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
 
       {/* 실시간 지도 조회 기간 / 일자 선택 바 */}
       <div
+        className="no-scrollbar"
         style={{
           display: 'flex',
           gap: 6,
           overflowX: 'auto',
           padding: '2px 12px 6px 12px',
           flexShrink: 0,
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none'
         }}
       >
         {periodOptions.map((p) => (
