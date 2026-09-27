@@ -293,12 +293,12 @@ const StatsDashboard = ({ stats }) => {
   const periodLabelText = {
     '1MONTH': '최근 1개월',
     '6MONTHS': '최근 6개월',
-    '1YEAR': '최근 1년 (소방청 2024 공식 팩트)',
-    '3YEARS': '최근 3년 (2022~2024년 누계)',
-    '5YEARS': '최근 5년 (2020~2024년 191,510건 전수)',
-    '10YEARS': '최근 10년 누계 (2015~2024년 공식 팩트)',
-    '20YEARS': '최근 20년 누계 (2005~2024년 공식 팩트)'
-  }[statsPeriod] || '최근 1년 (소방청 공식 팩트)';
+    '1YEAR': '최근 1년 (2024년)',
+    '3YEARS': '최근 3년 누계 (2022~2024)',
+    '5YEARS': '최근 5년 전수 (191,510건)',
+    '10YEARS': '최근 10년 누계',
+    '20YEARS': '최근 20년 누계'
+  }[statsPeriod] || '최근 1년';
 
   return (
     <div className="stats-view">
@@ -346,7 +346,18 @@ const StatsDashboard = ({ stats }) => {
           <Calendar size={16} style={{ color: '#f97316' }} />
           <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#f8fafc' }}>소방청 공식 팩트 통계 기간</span>
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            gap: 6,
+            overflowX: 'auto',
+            paddingBottom: 2,
+            WebkitOverflowScrolling: 'touch',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
+          }}
+        >
           {[
             { id: '1MONTH', label: '1개월' },
             { id: '6MONTHS', label: '6개월' },
@@ -369,6 +380,7 @@ const StatsDashboard = ({ stats }) => {
                 fontWeight: statsPeriod === tab.id ? 700 : 500,
                 cursor: 'pointer',
                 flexShrink: 0,
+                whiteSpace: 'nowrap',
                 transition: 'all 0.2s ease'
               }}
             >
@@ -380,12 +392,21 @@ const StatsDashboard = ({ stats }) => {
 
       {/* 종합 현황 요약 카드 */}
       <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9))' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div className="section-title">
-            <Flame size={18} style={{ color: '#f97316' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          <div className="section-title" style={{ fontSize: '0.95rem', margin: 0 }}>
+            <Flame size={18} style={{ color: '#f97316', flexShrink: 0 }} />
             <span>{periodLabelText} 요약</span>
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+          <span
+            style={{
+              fontSize: '0.72rem',
+              color: '#cbd5e1',
+              background: 'rgba(255, 255, 255, 0.06)',
+              padding: '3px 8px',
+              borderRadius: 6,
+              whiteSpace: 'nowrap'
+            }}
+          >
             위험등급: <strong style={{ color: '#f59e0b' }}>{officialSummary.riskLevel}</strong>
           </span>
         </div>

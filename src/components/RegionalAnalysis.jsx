@@ -154,7 +154,18 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
           <Calendar size={15} style={{ color: '#f97316' }} />
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f8fafc' }}>지역 분석 기간</span>
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: 'flex',
+            gap: 6,
+            overflowX: 'auto',
+            paddingBottom: 2,
+            WebkitOverflowScrolling: 'touch',
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
+          }}
+        >
           {[
             { id: '1MONTH', label: '1개월' },
             { id: '1YEAR', label: '1년 (2024 팩트)' },
@@ -176,6 +187,7 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
                 fontWeight: regionPeriod === t.id ? 700 : 500,
                 cursor: 'pointer',
                 flexShrink: 0,
+                whiteSpace: 'nowrap',
                 transition: 'all 0.2s ease'
               }}
             >
