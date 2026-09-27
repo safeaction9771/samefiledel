@@ -224,12 +224,12 @@ const FireOccurList = ({ onSelectIncident }) => {
     const total5y = csvStats.total_count || 191510;
 
     if (selectedRegion === '전국 (전체)') {
-      if (periodFilter === 'TODAY') return Math.round(y2024 / 365);
-      if (periodFilter === '3DAYS') return Math.round((y2024 / 365) * 3);
-      if (periodFilter === '7DAYS') return Math.round((y2024 / 365) * 7);
-      if (periodFilter === '1MONTH') return Math.round(y2024 / 12);
-      if (periodFilter === '3MONTHS') return Math.round(y2024 / 4);
-      if (periodFilter === '6MONTHS') return Math.round(y2024 / 2);
+      if (periodFilter === 'TODAY') return Math.max(filteredList.length, Math.round(y2024 / 365));
+      if (periodFilter === '3DAYS') return Math.max(filteredList.length, Math.round((y2024 / 365) * 3));
+      if (periodFilter === '7DAYS') return Math.max(filteredList.length, Math.round((y2024 / 365) * 7));
+      if (periodFilter === '1MONTH') return Math.max(filteredList.length, Math.round(y2024 / 12));
+      if (periodFilter === '3MONTHS') return Math.max(filteredList.length, Math.round(y2024 / 4));
+      if (periodFilter === '6MONTHS') return Math.max(filteredList.length, Math.round(y2024 / 2));
       if (periodFilter === '1YEAR') return y2024;
       if (periodFilter === '3YEARS') return y2024 + y2023 + y2022; // 116,584건
       if (periodFilter === '5YEARS') return total5y; // 191,510건
@@ -242,12 +242,12 @@ const FireOccurList = ({ onSelectIncident }) => {
         (k) => k.includes(selectedRegion) || selectedRegion.includes(k)
       );
       const sidoTotal = matchedKey ? bySido[matchedKey].count : filteredList.length;
-      if (periodFilter === 'TODAY') return Math.round(sidoTotal / (365 * 5));
-      if (periodFilter === '3DAYS') return Math.round((sidoTotal / (365 * 5)) * 3);
-      if (periodFilter === '7DAYS') return Math.round((sidoTotal / (365 * 5)) * 7);
-      if (periodFilter === '1MONTH') return Math.round(sidoTotal / 60);
-      if (periodFilter === '3MONTHS') return Math.round(sidoTotal / 20);
-      if (periodFilter === '6MONTHS') return Math.round(sidoTotal / 10);
+      if (periodFilter === 'TODAY') return Math.max(filteredList.length, Math.round(sidoTotal / (365 * 5)));
+      if (periodFilter === '3DAYS') return Math.max(filteredList.length, Math.round((sidoTotal / (365 * 5)) * 3));
+      if (periodFilter === '7DAYS') return Math.max(filteredList.length, Math.round((sidoTotal / (365 * 5)) * 7));
+      if (periodFilter === '1MONTH') return Math.max(filteredList.length, Math.round(sidoTotal / 60));
+      if (periodFilter === '3MONTHS') return Math.max(filteredList.length, Math.round(sidoTotal / 20));
+      if (periodFilter === '6MONTHS') return Math.max(filteredList.length, Math.round(sidoTotal / 10));
       if (periodFilter === '1YEAR') return Math.round(sidoTotal / 5);
       if (periodFilter === '3YEARS') return Math.round((sidoTotal * 3) / 5);
       if (periodFilter === '5YEARS') return sidoTotal;
@@ -284,6 +284,8 @@ const FireOccurList = ({ onSelectIncident }) => {
     { id: 'ALL', label: '전체 공식 기록' },
     { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
   ];
+
+  const regionDisplayName = selectedRegion === '전국 (전체)' ? '전국' : selectedRegion;
 
   return (
     <div className="stats-view">
@@ -437,7 +439,7 @@ const FireOccurList = ({ onSelectIncident }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
         <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Flame size={16} style={{ color: '#ef4444' }} />
-          <span>소방청 화재발생 정보 목록 ({selectedRegion})</span>
+          <span>소방청 화재발생 정보 목록 ({regionDisplayName})</span>
         </div>
         <div style={{ fontSize: '0.8rem', color: '#f97316', fontWeight: 800 }}>
           총 {totalPeriodCount.toLocaleString()}건
