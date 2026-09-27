@@ -21,11 +21,18 @@
     <!-- Fonts: Pretendard -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <script>
-      // 브라우저에 남아있는 이전 캐시 및 서비스워커 자동 강제 초기화
+      // 브라우저 및 PWA에 남아있는 이전 캐시 및 서비스워커 자동 강제 초기화
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
           for (var registration of registrations) {
             registration.unregister();
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var name of names) {
+            caches.delete(name);
           }
         });
       }
