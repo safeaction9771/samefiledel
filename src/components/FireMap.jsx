@@ -270,10 +270,28 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     });
   }, [masterIncidentsPool, periodFilter, customSelectedDate, todayStr]);
 
+const SIDO_FULLNAME_MAP = {
+  '서울': '서울특별시', '경기': '경기도', '인천': '인천광역시',
+  '강원': '강원특별자치도', '대구': '대구광역시', '경북': '경상북도',
+  '경남': '경상남도', '부산': '부산광역시', '울산': '울산광역시',
+  '충북': '충청북도', '충남': '충청남도', '대전': '대전광역시',
+  '세종': '세종특별자치시', '전북': '전북특별자치도', '전남': '전라남도',
+  '광주': '광주광역시', '제주': '제주특별자치도'
+};
+
+const matchSido = (itemRegion = '', targetRegion = '') => {
+  if (!targetRegion || targetRegion === 'ALL' || targetRegion === '전국' || targetRegion.includes('전국')) return true;
+  if (!itemRegion) return false;
+  if (itemRegion === targetRegion) return true;
+  const itemFull = SIDO_FULLNAME_MAP[itemRegion] || itemRegion;
+  const targetFull = SIDO_FULLNAME_MAP[targetRegion] || targetRegion;
+  return itemFull === targetFull || itemRegion.includes(targetRegion) || targetRegion.includes(itemRegion);
+};
+
   // 선택된 지역에 따른 마커 핀 필터링
   const regionIncidents = useMemo(() => {
     if (selectedRegion === 'ALL') return periodFilteredPool;
-    return periodFilteredPool.filter((inc) => inc.region === selectedRegion);
+    return periodFilteredPool.filter((inc) => matchSido(inc.region || inc.occurPlace, selectedRegion));
   }, [periodFilteredPool, selectedRegion]);
 
   // 상태별 필터링
@@ -310,10 +328,10 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
       else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = Math.max(regionIncidents.length, 832981); // 20개년 83.2만건
     } else {
       const bySido = csvStats.by_sido || {};
-      const matchedKey = Object.keys(bySido).find(
-        (k) => k.includes(selectedRegion) || selectedRegion.includes(k)
-      );
-      const sidoTotal = matchedKey ? bySido[matchedKey].count : regionIncidents.length;
+      const fullName = SIDO_FULLNAME_MAP[selectedRegion] || selectedRegion;
+      const sidoObj = bySido[fullName] || bySido[selectedRegion] || Object.values(bySido).find((v) => v.sido === fullName || v.sido === selectedRegion);
+      const sidoTotal = sidoObj?.count || regionIncidents.length || 5000;
+
       if (periodFilter === 'TODAY') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / (365 * 5)));
       else if (periodFilter === '3DAYS') totalCount = Math.max(regionIncidents.length, Math.round((sidoTotal / (365 * 5)) * 3));
       else if (periodFilter === '7DAYS') totalCount = Math.max(regionIncidents.length, Math.round((sidoTotal / (365 * 5)) * 7));

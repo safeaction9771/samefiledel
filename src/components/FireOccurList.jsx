@@ -238,10 +238,19 @@ const FireOccurList = ({ onSelectIncident }) => {
       return filteredList.length;
     } else {
       const bySido = csvStats.by_sido || {};
-      const matchedKey = Object.keys(bySido).find(
-        (k) => k.includes(selectedRegion) || selectedRegion.includes(k)
-      );
-      const sidoTotal = matchedKey ? bySido[matchedKey].count : filteredList.length;
+      const cleanRegion = selectedRegion.replace(/\(.*\)/g, '').trim();
+      const SIDO_FULLNAME_MAP = {
+        '서울': '서울특별시', '경기': '경기도', '인천': '인천광역시',
+        '강원': '강원특별자치도', '대구': '대구광역시', '경북': '경상북도',
+        '경남': '경상남도', '부산': '부산광역시', '울산': '울산광역시',
+        '충북': '충청북도', '충남': '충청남도', '대전': '대전광역시',
+        '세종': '세종특별자치시', '전북': '전북특별자치도', '전남': '전라남도',
+        '광주': '광주광역시', '제주': '제주특별자치도'
+      };
+      const fullName = SIDO_FULLNAME_MAP[cleanRegion] || cleanRegion;
+      const sidoObj = bySido[fullName] || bySido[cleanRegion] || Object.values(bySido).find((v) => v.sido === fullName || v.sido === cleanRegion);
+      const sidoTotal = sidoObj?.count || filteredList.length || 5000;
+
       if (periodFilter === 'TODAY') return Math.max(filteredList.length, Math.round(sidoTotal / (365 * 5)));
       if (periodFilter === '3DAYS') return Math.max(filteredList.length, Math.round((sidoTotal / (365 * 5)) * 3));
       if (periodFilter === '7DAYS') return Math.max(filteredList.length, Math.round((sidoTotal / (365 * 5)) * 7));
