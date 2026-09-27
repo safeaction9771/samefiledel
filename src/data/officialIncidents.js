@@ -4,6 +4,8 @@ import sidoReception from './nfa_sido_reception.json';
 import ignitionSummary from './nfa_ignition_summary.json';
 import buildingSummary from './nfa_building_summary.json';
 import yearlyTrend from './nfa_yearly_trend.json';
+import nfaCsvStats from './nfa_csv_stats.json';
+import nfaCsvIncidents from './nfa_csv_incidents.json';
 
 // 전국 17개 시도 리스트
 export const REGIONS = [
@@ -18,6 +20,8 @@ export const NFA_IGNITION_SUMMARY = ignitionSummary;
 export const NFA_BUILDING_SUMMARY = buildingSummary;
 export const NFA_YEARLY_TREND = yearlyTrend;
 export const NFA_10YEARS_SUMMARY = yearlyTrend;
+export const NFA_CSV_STATS = nfaCsvStats;
+export const NFA_CSV_INCIDENTS = nfaCsvIncidents;
 
 // 전국 17개 시도 중심 좌표
 export const SIDO_CENTERS = {
@@ -359,10 +363,16 @@ export const getCoordinatesForPlace = (placeStr = '', regionStr = '') => {
   return { lat: center.lat, lng: center.lng };
 };
 
-// 🏛️ 공공데이터포털 소방청 OpenAPI 원본 기반 마스터 데이터 풀 구축 (시·군·구 행정구역별 지리적 분산 매핑)
+// 🏛️ 공공데이터포털 소방청 OpenAPI 및 CSV 원본 기반 마스터 데이터 풀 구축 (시·군·구 행정구역별 지리적 분산 매핑)
 const formatRawIncidents = () => {
   const list = [];
   
+  // 1. 공공데이터포털 소방청_화재발생 정보 공식 CSV 레코드 (개별 화재 상세 건)
+  if (Array.isArray(nfaCsvIncidents) && nfaCsvIncidents.length > 0) {
+    list.push(...nfaCsvIncidents);
+  }
+
+  // 2. 공공데이터포털 소방청 OpenAPI 일별 시도 통계 레코드
   for (let i = 0; i < sidoDaily.length; i++) {
     const row = sidoDaily[i];
     if (!row || !row.ocrn_ymd) continue;
@@ -433,6 +443,15 @@ export const NFA_OFFICIAL_INCIDENTS_DATABASE = formatRawIncidents();
 
 // 데이터 출처 배지 정보
 export const getIncidentSourceBadge = (incident = {}) => {
+  if (incident && (incident.id?.startsWith('NFA-CSV') || incident.source?.includes('CSV'))) {
+    return {
+      label: '소방청 화재발생정보 CSV 공식 원본 (15044003)',
+      color: '#10b981',
+      bg: 'rgba(16, 185, 129, 0.15)',
+      border: '1px solid rgba(16, 185, 129, 0.4)',
+      desc: '대한민국 소방청 / 행정안전부 공공데이터포털 소방청_화재발생 정보 191,510건 전수 공식 데이터셋'
+    };
+  }
   return {
     label: '공공데이터포털 100% OpenAPI 원본',
     color: '#38bdf8',

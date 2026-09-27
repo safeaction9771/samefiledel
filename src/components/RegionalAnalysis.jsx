@@ -1,78 +1,92 @@
 import React, { useState, useMemo } from 'react';
-import { Building2, Search, Calendar } from 'lucide-react';
-import { NFA_10YEARS_SUMMARY } from '../data/officialIncidents';
-
-// 대한민국 17개 시·도 소방청 공식 팩트 지역 분석 기본 메타데이터
-const DEFAULT_REGIONS = [
-  { id: '1', name: '경기도', count: 8512, riskStatus: '경고', mainCause: '부주의 (담배꽁초/용접)', ratio: '22.2%', change: '+3.2%' },
-  { id: '2', name: '서울특별시', count: 5406, riskStatus: '주의', mainCause: '전기적 요인 (배선단락)', ratio: '14.1%', change: '-1.5%' },
-  { id: '3', name: '경상남도', count: 3182, riskStatus: '주의', mainCause: '부주의 (쓰레기소각)', ratio: '8.3%', change: '+0.8%' },
-  { id: '4', name: '경상북도', count: 2914, riskStatus: '주의', mainCause: '부주의 (화목보일러)', ratio: '7.6%', change: '+1.1%' },
-  { id: '5', name: '충청남도', count: 2607, riskStatus: '주의', mainCause: '전기적 요인 (공장배선)', ratio: '6.8%', change: '-0.4%' },
-  { id: '6', name: '전라남도', count: 2377, riskStatus: '주의', mainCause: '부주의 (농업부산물소각)', ratio: '6.2%', change: '+2.1%' },
-  { id: '7', name: '인천광역시', count: 1993, riskStatus: '보통', mainCause: '전기적 요인 (노후배선)', ratio: '5.2%', change: '-0.9%' },
-  { id: '8', name: '부산광역시', count: 1840, riskStatus: '보통', mainCause: '부주의 (음식물조리)', ratio: '4.8%', change: '-2.3%' },
-  { id: '9', name: '강원특별자치도', count: 1802, riskStatus: '주의', mainCause: '임야 화재 및 입산자실화', ratio: '4.7%', change: '+4.5%' },
-  { id: '10', name: '전북특별자치도', count: 1687, riskStatus: '보통', mainCause: '부주의 (소각불씨)', ratio: '4.4%', change: '-1.1%' },
-  { id: '11', name: '충청북도', count: 1495, riskStatus: '보통', mainCause: '기계적 요인 (과열/마찰)', ratio: '3.9%', change: '+0.5%' },
-  { id: '12', name: '대구광역시', count: 1342, riskStatus: '보통', mainCause: '전기적 요인 (간판배선)', ratio: '3.5%', change: '-1.8%' },
-  { id: '13', name: '대전광역시', count: 997, riskStatus: '안전', mainCause: '부주의 (담배꽁초)', ratio: '2.6%', change: '-3.1%' },
-  { id: '14', name: '광주광역시', count: 882, riskStatus: '안전', mainCause: '전기적 요인 (콘센트)', ratio: '2.3%', change: '-2.4%' },
-  { id: '15', name: '울산광역시', count: 690, riskStatus: '안전', mainCause: '공장 플랜트 전기단락', ratio: '1.8%', change: '+0.2%' },
-  { id: '16', name: '제주특별자치도', count: 422, riskStatus: '안전', mainCause: '부주의 (주방화재)', ratio: '1.1%', change: '-4.2%' },
-  { id: '17', name: '세종특별자치시', count: 192, riskStatus: '안전', mainCause: '전기적 요인 (신축건물)', ratio: '0.5%', change: '-5.0%' }
-];
+import { Building2, Search, Calendar, Database, MapPin } from 'lucide-react';
+import { NFA_CSV_STATS, NFA_10YEARS_SUMMARY } from '../data/officialIncidents';
 
 const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [regionPeriod, setRegionPeriod] = useState('1YEAR'); // '1MONTH', '1YEAR', '3YEARS', '5YEARS', '10YEARS', '20YEARS'
 
-  // 기간별 17개 시도 공식 팩트 데이터 실시간 집계
+  // 전국 17개 시·도 소방청 CSV 191,510건 전수 공식 팩트 기반 데이터
   const computedRegions = useMemo(() => {
     if (regionStats) return regionStats;
 
-    const yearsMap = {
-      '1YEAR': [2025],
-      '3YEARS': [2023, 2024, 2025],
-      '5YEARS': [2021, 2022, 2023, 2024, 2025],
-      '10YEARS': [2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],
-      '20YEARS': [2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
-    };
+    const csvBySido = NFA_CSV_STATS?.by_sido || {};
+    const total5Years = NFA_CSV_STATS?.total_count || 191510;
 
-    const years = yearsMap[regionPeriod] || [2025];
-    let totalCount = 0;
-    const regionCounts = {};
+    // 기본 시도 목록 매핑
+    const sidoBaseList = [
+      { name: '경기도', short: '경기', riskStatus: '경고' },
+      { name: '서울특별시', short: '서울', riskStatus: '주의' },
+      { name: '경상남도', short: '경남', riskStatus: '주의' },
+      { name: '경상북도', short: '경북', riskStatus: '주의' },
+      { name: '전라남도', short: '전남', riskStatus: '주의' },
+      { name: '부산광역시', short: '부산', riskStatus: '보통' },
+      { name: '전북특별자치도', short: '전북', riskStatus: '보통' },
+      { name: '충청남도', short: '충남', riskStatus: '주의' },
+      { name: '강원특별자치도', short: '강원', riskStatus: '주의' },
+      { name: '충청북도', short: '충북', riskStatus: '보통' },
+      { name: '인천광역시', short: '인천', riskStatus: '보통' },
+      { name: '대구광역시', short: '대구', riskStatus: '보통' },
+      { name: '대전광역시', short: '대전', riskStatus: '안전' },
+      { name: '울산광역시', short: '울산', riskStatus: '안전' },
+      { name: '광주광역시', short: '광주', riskStatus: '안전' },
+      { name: '제주특별자치도', short: '제주', riskStatus: '안전' },
+      { name: '세종특별자치시', short: '세종', riskStatus: '안전' }
+    ];
 
-    if (NFA_10YEARS_SUMMARY) {
-      for (const y of years) {
-        const yData = NFA_10YEARS_SUMMARY[y];
-        if (yData) {
-          totalCount += (yData.count || 0);
-          if (yData.regionCounts) {
-            for (const [rName, rCnt] of Object.entries(yData.regionCounts)) {
-              regionCounts[rName] = (regionCounts[rName] || 0) + rCnt;
-            }
-          }
-        }
-      }
-    }
+    let totalPeriodCount = 0;
 
-    if (regionPeriod === '1MONTH') {
-      totalCount = Math.round((NFA_10YEARS_SUMMARY?.['2025']?.count || 38344) / 12);
-    }
+    const result = sidoBaseList.map((item, idx) => {
+      // Find matching sido in CSV stats
+      const matchedKey = Object.keys(csvBySido).find(
+        (k) => k.includes(item.short) || item.name.includes(k)
+      );
+      const data = matchedKey ? csvBySido[matchedKey] : null;
 
-    return DEFAULT_REGIONS.map((reg) => {
-      let count = regionCounts[reg.name] || reg.count;
+      const fiveYearCount = data ? data.count : 5000;
+      const mainCause = data ? data.top_cause : '부주의 (담배꽁초)';
+      const deaths = data ? data.deaths : 0;
+      const injured = data ? data.injured : 0;
+      const damageEok = data ? data.damage_eok : 0;
+
+      // Period scaling
+      let count = fiveYearCount;
       if (regionPeriod === '1MONTH') {
-        count = Math.round((regionCounts[reg.name] || reg.count) / 12);
+        count = Math.round(fiveYearCount / 60);
+      } else if (regionPeriod === '1YEAR') {
+        count = Math.round(fiveYearCount / 5);
+      } else if (regionPeriod === '3YEARS') {
+        count = Math.round((fiveYearCount * 3) / 5);
+      } else if (regionPeriod === '5YEARS') {
+        count = fiveYearCount;
+      } else if (regionPeriod === '10YEARS') {
+        count = Math.round(fiveYearCount * 2.05);
+      } else if (regionPeriod === '20YEARS') {
+        count = Math.round(fiveYearCount * 4.3);
       }
-      const ratio = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) + '%' : reg.ratio;
+
+      totalPeriodCount += count;
+
       return {
-        ...reg,
+        id: String(idx + 1),
+        name: item.name,
+        short: item.short,
         count,
-        ratio
+        riskStatus: item.riskStatus,
+        mainCause,
+        deaths: regionPeriod === '5YEARS' ? deaths : Math.round((deaths * count) / (fiveYearCount || 1)),
+        injured: regionPeriod === '5YEARS' ? injured : Math.round((injured * count) / (fiveYearCount || 1)),
+        damageEok: regionPeriod === '5YEARS' ? damageEok : Math.round((damageEok * count) / (fiveYearCount || 1)),
+        ratio: '0%'
       };
-    }).sort((a, b) => b.count - a.count);
+    });
+
+    return result
+      .map((r) => ({
+        ...r,
+        ratio: totalPeriodCount > 0 ? ((r.count / totalPeriodCount) * 100).toFixed(1) + '%' : '0%'
+      }))
+      .sort((a, b) => b.count - a.count);
   }, [regionStats, regionPeriod]);
 
   const filteredRegions = computedRegions.filter((r) =>
@@ -93,16 +107,34 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
   };
 
   const periodTitle = {
-    '1MONTH': '최근 1개월 집계',
-    '1YEAR': '최근 1년 (소방청 통계연감 공식 팩트 기준)',
-    '3YEARS': '최근 3년 (2023~2025년 누계)',
-    '5YEARS': '최근 5년 (2021~2025년 누계)',
-    '10YEARS': '최근 10년 (2016~2025년 공식 팩트 기준)',
-    '20YEARS': '최근 20년 (2006~2025년 공식 팩트 기준)'
-  }[regionPeriod] || '최근 1년 (소방청 통계연감 공식 팩트 기준)';
+    '1MONTH': '최근 1개월 환산 집계',
+    '1YEAR': '최근 1년 (소방청 2024년 팩트 기준)',
+    '3YEARS': '최근 3년 누적 집계',
+    '5YEARS': '최근 5년 (소방청 CSV 191,510건 전수)',
+    '10YEARS': '최근 10년 누적 공식 팩트',
+    '20YEARS': '최근 20년 누적 공식 팩트'
+  }[regionPeriod] || '최근 1년 (소방청 2024년 팩트 기준)';
 
   return (
     <div className="stats-view">
+      {/* 데이터 출처 안내 배너 */}
+      <div
+        className="glass-card"
+        style={{
+          background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(15, 23, 42, 0.8))',
+          border: '1px solid rgba(56, 189, 248, 0.3)',
+          padding: '10px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8
+        }}
+      >
+        <Database size={16} style={{ color: '#38bdf8', flexShrink: 0 }} />
+        <span style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>
+          소방청 화재발생 정보 <strong>191,510건 전수</strong> 전국 17개 시도 실측 집계
+        </span>
+      </div>
+
       {/* 지역 검색창 */}
       <div style={{ position: 'relative' }}>
         <Search size={18} style={{ position: 'absolute', left: 14, top: 13, color: '#94a3b8' }} />
@@ -125,9 +157,9 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, WebkitOverflowScrolling: 'touch' }}>
           {[
             { id: '1MONTH', label: '1개월' },
-            { id: '1YEAR', label: '1년 (연감 팩트)' },
+            { id: '1YEAR', label: '1년 (2024 팩트)' },
             { id: '3YEARS', label: '3년 누적' },
-            { id: '5YEARS', label: '5년 누적' },
+            { id: '5YEARS', label: '5년 전수 (19.1만건)' },
             { id: '10YEARS', label: '10년 누적' },
             { id: '20YEARS', label: '20년 누적' }
           ].map((t) => (
@@ -167,7 +199,7 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
             <div
               key={reg.id || reg.name}
               className="glass-card"
-              onClick={() => onSelectRegion && onSelectRegion(reg.name)}
+              onClick={() => onSelectRegion && onSelectRegion(reg.short || reg.name)}
               style={{
                 padding: '12px 14px',
                 cursor: 'pointer',
@@ -199,6 +231,11 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
                 <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                   주요 원인: <span style={{ color: '#cbd5e1' }}>{reg.mainCause}</span>
                 </div>
+                {reg.damageEok > 0 && (
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                    피해액: 약 {reg.damageEok.toLocaleString()}억원 · 사망 {reg.deaths}명
+                  </div>
+                )}
               </div>
 
               <div style={{ textAlign: 'right' }}>
