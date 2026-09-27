@@ -248,11 +248,11 @@ const FireOccurList = ({ onSelectIncident }) => {
       if (periodFilter === '1MONTH') return Math.max(filteredList.length, Math.round(sidoTotal / 60));
       if (periodFilter === '3MONTHS') return Math.max(filteredList.length, Math.round(sidoTotal / 20));
       if (periodFilter === '6MONTHS') return Math.max(filteredList.length, Math.round(sidoTotal / 10));
-      if (periodFilter === '1YEAR') return Math.round(sidoTotal / 5);
-      if (periodFilter === '3YEARS') return Math.round((sidoTotal * 3) / 5);
-      if (periodFilter === '5YEARS') return sidoTotal;
-      if (periodFilter === '10YEARS') return Math.round(sidoTotal * 2.05);
-      if (periodFilter === '20YEARS' || periodFilter === 'ALL') return Math.round(sidoTotal * 4.3);
+      if (periodFilter === '1YEAR') return Math.max(filteredList.length, Math.round(sidoTotal / 5));
+      if (periodFilter === '3YEARS') return Math.max(filteredList.length, Math.round((sidoTotal * 3) / 5));
+      if (periodFilter === '5YEARS') return Math.max(filteredList.length, sidoTotal);
+      if (periodFilter === '10YEARS') return Math.max(filteredList.length, Math.round(sidoTotal * 2.05));
+      if (periodFilter === '20YEARS' || periodFilter === 'ALL') return Math.max(filteredList.length, Math.round(sidoTotal * 4.3));
       return filteredList.length;
     }
   }, [filteredList, periodFilter, selectedRegion, searchTerm]);

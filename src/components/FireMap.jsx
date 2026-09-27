@@ -284,9 +284,8 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
 
   // 하단 3개 타일 건수 (소방청 191,510건 전수 CSV 및 공식 팩트 실시간 산출)
   const regionTileCounts = useMemo(() => {
-    let dispatching = regionIncidents.filter((inc) => inc.status === 'DISPATCHING').length;
-    let extinguishing = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHING').length;
-    let extinguished = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHED').length;
+    const dispatching = regionIncidents.filter((inc) => inc.status === 'DISPATCHING').length;
+    const extinguishing = regionIncidents.filter((inc) => inc.status === 'EXTINGUISHING').length;
 
     const csvStats = NFA_CSV_STATS || {};
     const yearly = csvStats.yearly || {};
@@ -298,39 +297,38 @@ const FireMap = ({ onSelectIncident, targetIncident = null }) => {
     let totalCount = regionIncidents.length;
 
     if (selectedRegion === 'ALL') {
-      if (periodFilter === 'TODAY') totalCount = Math.round(y2024 / 365);
-      else if (periodFilter === '3DAYS') totalCount = Math.round((y2024 / 365) * 3);
-      else if (periodFilter === '7DAYS') totalCount = Math.round((y2024 / 365) * 7);
-      else if (periodFilter === '1MONTH') totalCount = Math.round(y2024 / 12);
-      else if (periodFilter === '3MONTHS') totalCount = Math.round(y2024 / 4);
-      else if (periodFilter === '6MONTHS') totalCount = Math.round(y2024 / 2);
-      else if (periodFilter === '1YEAR') totalCount = y2024;
-      else if (periodFilter === '3YEARS') totalCount = y2024 + y2023 + y2022; // 116,584건
-      else if (periodFilter === '5YEARS') totalCount = total5y; // 191,510건
-      else if (periodFilter === '10YEARS') totalCount = 399886;
-      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = 832981;
+      if (periodFilter === 'TODAY') totalCount = Math.max(regionIncidents.length, Math.round(y2024 / 365));
+      else if (periodFilter === '3DAYS') totalCount = Math.max(regionIncidents.length, Math.round((y2024 / 365) * 3));
+      else if (periodFilter === '7DAYS') totalCount = Math.max(regionIncidents.length, Math.round((y2024 / 365) * 7));
+      else if (periodFilter === '1MONTH') totalCount = Math.max(regionIncidents.length, Math.round(y2024 / 12));
+      else if (periodFilter === '3MONTHS') totalCount = Math.max(regionIncidents.length, Math.round(y2024 / 4));
+      else if (periodFilter === '6MONTHS') totalCount = Math.max(regionIncidents.length, Math.round(y2024 / 2));
+      else if (periodFilter === '1YEAR') totalCount = Math.max(regionIncidents.length, y2024);
+      else if (periodFilter === '3YEARS') totalCount = Math.max(regionIncidents.length, y2024 + y2023 + y2022); // 116,584건
+      else if (periodFilter === '5YEARS') totalCount = Math.max(regionIncidents.length, total5y); // 191,510건
+      else if (periodFilter === '10YEARS') totalCount = Math.max(regionIncidents.length, 399886); // 10개년 39.9만건
+      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = Math.max(regionIncidents.length, 832981); // 20개년 83.2만건
     } else {
       const bySido = csvStats.by_sido || {};
       const matchedKey = Object.keys(bySido).find(
         (k) => k.includes(selectedRegion) || selectedRegion.includes(k)
       );
       const sidoTotal = matchedKey ? bySido[matchedKey].count : regionIncidents.length;
-      if (periodFilter === 'TODAY') totalCount = Math.round(sidoTotal / (365 * 5));
-      else if (periodFilter === '3DAYS') totalCount = Math.round((sidoTotal / (365 * 5)) * 3);
-      else if (periodFilter === '7DAYS') totalCount = Math.round((sidoTotal / (365 * 5)) * 7);
-      else if (periodFilter === '1MONTH') totalCount = Math.round(sidoTotal / 60);
-      else if (periodFilter === '3MONTHS') totalCount = Math.round(sidoTotal / 20);
-      else if (periodFilter === '6MONTHS') totalCount = Math.round(sidoTotal / 10);
-      else if (periodFilter === '1YEAR') totalCount = Math.round(sidoTotal / 5);
-      else if (periodFilter === '3YEARS') totalCount = Math.round((sidoTotal * 3) / 5);
-      else if (periodFilter === '5YEARS') totalCount = sidoTotal;
-      else if (periodFilter === '10YEARS') totalCount = Math.round(sidoTotal * 2.05);
-      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = Math.round(sidoTotal * 4.3);
+      if (periodFilter === 'TODAY') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / (365 * 5)));
+      else if (periodFilter === '3DAYS') totalCount = Math.max(regionIncidents.length, Math.round((sidoTotal / (365 * 5)) * 3));
+      else if (periodFilter === '7DAYS') totalCount = Math.max(regionIncidents.length, Math.round((sidoTotal / (365 * 5)) * 7));
+      else if (periodFilter === '1MONTH') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / 60));
+      else if (periodFilter === '3MONTHS') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / 20));
+      else if (periodFilter === '6MONTHS') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / 10));
+      else if (periodFilter === '1YEAR') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal / 5));
+      else if (periodFilter === '3YEARS') totalCount = Math.max(regionIncidents.length, Math.round((sidoTotal * 3) / 5));
+      else if (periodFilter === '5YEARS') totalCount = Math.max(regionIncidents.length, sidoTotal);
+      else if (periodFilter === '10YEARS') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal * 2.05));
+      else if (periodFilter === '20YEARS' || periodFilter === 'ALL') totalCount = Math.max(regionIncidents.length, Math.round(sidoTotal * 4.3));
     }
 
-    if (totalCount > 0 && extinguished === 0) {
-      extinguished = totalCount;
-    }
+    // 초진완료/완진 건수: 총 건수에서 실시간 출동 및 현장 진화 건수를 제외한 완진 확정치
+    const extinguished = Math.max(0, totalCount - dispatching - extinguishing);
 
     return {
       dispatching,
