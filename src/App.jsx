@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Flame, BarChart3, Building2, Monitor, RefreshCw, Radio, Youtube } from 'lucide-react';
+import { Map, Flame, BarChart3, Building2, Monitor, RefreshCw, Radio, Youtube, FileSpreadsheet } from 'lucide-react';
 import Header from './components/Header';
 import FireMap from './components/FireMap';
 import FireOccurList from './components/FireOccurList';
+import CsvDataViewer from './components/CsvDataViewer';
 import YouTubeFireNews from './components/YouTubeFireNews';
 import StatsDashboard from './components/StatsDashboard';
 import RegionalAnalysis from './components/RegionalAnalysis';
@@ -11,13 +12,14 @@ import AdminPinModal from './components/AdminPinModal';
 import FireDetailModal from './components/FireDetailModal';
 import { getStoredApiKey, saveApiKey, fetchFireOccurrences } from './services/fireApi';
 
-// 일반 모바일 모드 5개 내비게이션 탭 (실시간 지도, 발생 정보, 유튜브 뉴스, 화재 통계, 지역 분석)
+// 일반 모바일 모드 6개 내비게이션 탭 (실시간 지도, 발생 정보, CSV 원본, 화재 통계, 지역 분석, 유튜브 뉴스)
 const NAV_ITEMS = [
   { id: 'MAP', label: '실시간 지도', icon: Map },
   { id: 'OCCUR_LIST', label: '발생 정보', icon: Flame },
-  { id: 'YOUTUBE', label: '유튜브 뉴스', icon: Youtube },
+  { id: 'CSV_DATA', label: 'CSV 원본', icon: FileSpreadsheet },
   { id: 'STATS', label: '화재 통계', icon: BarChart3 },
   { id: 'REGION', label: '지역 분석', icon: Building2 },
+  { id: 'YOUTUBE', label: '유튜브 뉴스', icon: Youtube },
 ];
 
 function App() {
@@ -115,11 +117,11 @@ function App() {
                   <span>실시간 발생 정보</span>
                 </button>
                 <button
-                  className={`pc-tab-btn ${pcRightTab === 'YOUTUBE' ? 'active' : ''}`}
-                  onClick={() => setPcRightTab('YOUTUBE')}
+                  className={`pc-tab-btn ${pcRightTab === 'CSV_DATA' ? 'active' : ''}`}
+                  onClick={() => setPcRightTab('CSV_DATA')}
                 >
-                  <Youtube size={15} />
-                  <span>유튜브 화재 뉴스</span>
+                  <FileSpreadsheet size={15} />
+                  <span>CSV 원본(19.1만건)</span>
                 </button>
                 <button
                   className={`pc-tab-btn ${pcRightTab === 'STATS' ? 'active' : ''}`}
@@ -135,6 +137,13 @@ function App() {
                   <Building2 size={15} />
                   <span>17개 시·도 분석</span>
                 </button>
+                <button
+                  className={`pc-tab-btn ${pcRightTab === 'YOUTUBE' ? 'active' : ''}`}
+                  onClick={() => setPcRightTab('YOUTUBE')}
+                >
+                  <Youtube size={15} />
+                  <span>유튜브 화재 뉴스</span>
+                </button>
               </div>
             </div>
 
@@ -142,20 +151,24 @@ function App() {
               {pcRightTab === 'OCCUR_LIST' && (
                 <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />
               )}
-              {pcRightTab === 'YOUTUBE' && <YouTubeFireNews />}
+              {pcRightTab === 'CSV_DATA' && (
+                <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />
+              )}
               {pcRightTab === 'STATS' && <StatsDashboard />}
               {pcRightTab === 'REGION' && <RegionalAnalysis />}
+              {pcRightTab === 'YOUTUBE' && <YouTubeFireNews />}
             </div>
           </section>
         </main>
       ) : (
-        /* 📱 모바일 세로 뷰일 때: 5개 탭 화면 (실시간 지도, 발생 정보, 유튜브 뉴스, 통계, 지역분석) */
+        /* 📱 모바일 세로 뷰일 때: 6개 탭 화면 (실시간 지도, 발생 정보, CSV 원본, 통계, 지역분석, 유튜브 뉴스) */
         <main className="app-content">
           {activeTab === 'MAP' && <FireMap onSelectIncident={(inc) => setSelectedIncident(inc)} />}
           {activeTab === 'OCCUR_LIST' && <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />}
-          {activeTab === 'YOUTUBE' && <YouTubeFireNews />}
+          {activeTab === 'CSV_DATA' && <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />}
           {activeTab === 'STATS' && <StatsDashboard />}
           {activeTab === 'REGION' && <RegionalAnalysis />}
+          {activeTab === 'YOUTUBE' && <YouTubeFireNews />}
         </main>
       )}
 
