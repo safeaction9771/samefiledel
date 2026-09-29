@@ -46,33 +46,90 @@ const CsvDataViewer = ({ onSelectIncident }) => {
   // 연도별 필터링된 통계 정보
   const currentYearKey = selectedYear.replace('년', '').replace(' (5개년)', '');
   const isAllYears = selectedYear === '전체 (5개년)';
+
+  // 연도 및 시도 선택에 따른 통계 계산
   const currentStats = useMemo(() => {
-    if (isAllYears) {
+    // 1. 전국 (전체) 선택 시: 전수 데이터 원본에서 직접 로드
+    if (selectedSido === '전체') {
+      if (isAllYears) {
+        return {
+          count: stats.total_count || 191510,
+          deaths: stats.total_deaths || 1574,
+          injured: stats.total_injured || 10387,
+          casualties: stats.total_casualties || 11961,
+          damage_eok: stats.total_damage_eok || 46469.3,
+          cause_counts: stats.by_cause || {},
+          place_counts: stats.by_place || {}
+        };
+      }
+      const yData = stats.yearly?.[currentYearKey] || {};
       return {
-        count: stats.total_count || 191510,
-        deaths: stats.total_deaths || 1574,
-        injured: stats.total_injured || 10387,
-        casualties: stats.total_casualties || 11961,
-        damage_eok: stats.total_damage_eok || 46469.3,
-        cause_counts: stats.cause_breakdown ? Object.fromEntries(stats.cause_breakdown.map(c => [c.cause, c.count])) : {},
-        place_counts: stats.place_breakdown ? Object.fromEntries(stats.place_breakdown.map(p => [p.place, p.count])) : {}
+        count: yData.count || 0,
+        deaths: yData.deaths || 0,
+        injured: yData.injured || 0,
+        casualties: yData.casualties || 0,
+        damage_eok: yData.damage_eok_krw || 0,
+        cause_counts: yData.cause_counts || {},
+        place_counts: yData.place_counts || {}
       };
     }
-    const yData = stats.yearly?.[currentYearKey] || {};
-    return {
-      count: yData.count || 0,
-      deaths: yData.deaths || 0,
-      injured: yData.injured || 0,
-      casualties: yData.casualties || 0,
-      damage_eok: yData.damage_eok_krw || 0,
-      cause_counts: yData.cause_counts || {},
-      place_counts: yData.place_counts || {}
+
+    // 2. 특정 시도 선택 시: 해당 시도 데이터 계산
+    const findSidoCount = (sidoCounts = {}) => {
+      const entry = Object.entries(sidoCounts).find(([name]) => name.includes(selectedSido));
+      return entry ? entry[1] : 0;
     };
-  }, [selectedYear, stats]);
+
+    let totalSidoCount = 0;
+    if (isAllYears) {
+      if (stats.yearly) {
+        Object.values(stats.yearly).forEach(y => {
+          totalSidoCount += findSidoCount(y.sido_counts);
+        });
+      }
+    } else {
+      const yData = stats.yearly?.[currentYearKey] || {};
+      totalSidoCount = findSidoCount(yData.sido_counts);
+    }
+
+    // 해당 시도 내 원인별/장소별 집계 (샘플 데이터 분포 기반 집계)
+    const causeAgg = {};
+    const placeAgg = {};
+    let deathSum = 0;
+    let injurySum = 0;
+    let damageThousandSum = 0;
+
+    filteredRecords.forEach(r => {
+      const c = r.fireCause || r.cause || '기타';
+      causeAgg[c] = (causeAgg[c] || 0) + 1;
+
+      const p = r.placeCategory || '기타';
+      placeAgg[p] = (placeAgg[p] || 0) + 1;
+
+      deathSum += Number(r.deathCount) || 0;
+      injurySum += Number(r.injuryCount) || 0;
+      damageThousandSum += Number(r.damageAmount) || 0;
+    });
+
+    const displayCountVal = totalSidoCount > 0 ? totalSidoCount : filteredRecords.length;
+    const estDamageEok = isAllYears
+      ? Math.round((displayCountVal / (stats.total_count || 191510)) * (stats.total_damage_eok || 46469.3) * 10) / 10
+      : Math.round((damageThousandSum / 100000) * 10) / 10;
+
+    return {
+      count: displayCountVal,
+      deaths: deathSum,
+      injured: injurySum,
+      casualties: deathSum + injurySum,
+      damage_eok: estDamageEok || 0,
+      cause_counts: Object.keys(causeAgg).length > 0 ? causeAgg : (stats.by_cause || {}),
+      place_counts: Object.keys(placeAgg).length > 0 ? placeAgg : (stats.by_place || {})
+    };
+  }, [selectedYear, selectedSido, isAllYears, currentYearKey, stats, filteredRecords]);
 
   // 원인 목록 추출
   const causeOptions = useMemo(() => {
-    const causes = stats.cause_breakdown ? stats.cause_breakdown.map(c => c.cause) : [];
+    const causes = stats.by_cause ? Object.keys(stats.by_cause) : [];
     return ['전체', ...causes];
   }, [stats]);
 
@@ -224,13 +281,13 @@ const CsvDataViewer = ({ onSelectIncident }) => {
 
           <div style={{ background: 'rgba(15, 23, 42, 0.8)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <div style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Building2 size={12} style={{ color: '#38bdf8' }} /> 최다 발생 시도
+              <Building2 size={12} style={{ color: '#38bdf8' }} /> {selectedSido === '전체' ? '최다 발생 시도' : '선택 시도 비중'}
             </div>
             <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#38bdf8', marginTop: 2 }}>
-              경기도
+              {selectedSido === '전체' ? '경기도' : selectedSido}
             </div>
             <div style={{ fontSize: '0.66rem', color: '#94a3b8' }}>
-              41,826건 (21.8%)
+              {selectedSido === '전체' ? '41,826건 (21.8%)' : `전국 대비 ${((currentStats.count / (stats.total_count || 191510)) * 100).toFixed(1)}%`}
             </div>
           </div>
         </div>
@@ -525,29 +582,33 @@ const CsvDataViewer = ({ onSelectIncident }) => {
         <div style={{ background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             <Flame size={16} style={{ color: '#f97316' }} />
-            {selectedYear} 화재 발화원인별 전수 집계 (총 {currentStats.count.toLocaleString()}건)
+            {selectedYear} {selectedSido !== '전체' ? `[${selectedSido}]` : ''} 화재 발화원인별 전수 집계 (총 {currentStats.count.toLocaleString()}건)
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {Object.entries(currentStats.cause_counts).map(([cause, count]) => {
-              const pct = currentStats.count > 0 ? ((count / currentStats.count) * 100).toFixed(1) : 0;
-              return (
-                <div key={cause}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 3 }}>
-                    <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{cause}</span>
-                    <span style={{ color: '#38bdf8', fontWeight: 800 }}>{count.toLocaleString()}건 ({pct}%)</span>
+            {(() => {
+              const entries = Object.entries(currentStats.cause_counts || {}).sort((a, b) => b[1] - a[1]);
+              const totalSum = entries.reduce((acc, [, val]) => acc + val, 0) || currentStats.count || 1;
+              return entries.map(([cause, count]) => {
+                const pct = ((count / totalSum) * 100).toFixed(1);
+                return (
+                  <div key={cause}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 3 }}>
+                      <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{cause}</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 800 }}>{count.toLocaleString()}건 ({pct}%)</span>
+                    </div>
+                    <div style={{ height: 8, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.min(100, Math.max(1, Number(pct)))}%`,
+                        background: cause.includes('부주의') ? '#f97316' : cause.includes('전기') ? '#eab308' : cause.includes('기계') ? '#38bdf8' : cause.includes('방화') ? '#ef4444' : '#10b981',
+                        borderRadius: 4
+                      }} />
+                    </div>
                   </div>
-                  <div style={{ height: 8, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${pct}%`,
-                      background: cause.includes('부주의') ? '#f97316' : cause.includes('전기') ? '#eab308' : cause.includes('기계') ? '#38bdf8' : '#10b981',
-                      borderRadius: 4
-                    }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         </div>
       )}
@@ -557,29 +618,33 @@ const CsvDataViewer = ({ onSelectIncident }) => {
         <div style={{ background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 10, padding: 16 }}>
           <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
             <Building2 size={16} style={{ color: '#38bdf8' }} />
-            {selectedYear} 장소 구분별 전수 집계 (총 {currentStats.count.toLocaleString()}건)
+            {selectedYear} {selectedSido !== '전체' ? `[${selectedSido}]` : ''} 장소 구분별 전수 집계 (총 {currentStats.count.toLocaleString()}건)
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {Object.entries(currentStats.place_counts).map(([place, count]) => {
-              const pct = currentStats.count > 0 ? ((count / currentStats.count) * 100).toFixed(1) : 0;
-              return (
-                <div key={place}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 3 }}>
-                    <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{place}</span>
-                    <span style={{ color: '#10b981', fontWeight: 800 }}>{count.toLocaleString()}건 ({pct}%)</span>
+            {(() => {
+              const entries = Object.entries(currentStats.place_counts || {}).sort((a, b) => b[1] - a[1]);
+              const totalSum = entries.reduce((acc, [, val]) => acc + val, 0) || currentStats.count || 1;
+              return entries.map(([place, count]) => {
+                const pct = ((count / totalSum) * 100).toFixed(1);
+                return (
+                  <div key={place}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: 3 }}>
+                      <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{place}</span>
+                      <span style={{ color: '#10b981', fontWeight: 800 }}>{count.toLocaleString()}건 ({pct}%)</span>
+                    </div>
+                    <div style={{ height: 8, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.min(100, Math.max(1, Number(pct)))}%`,
+                        background: place.includes('주거') ? '#ef4444' : place.includes('산업') ? '#f97316' : place.includes('생활') ? '#eab308' : '#38bdf8',
+                        borderRadius: 4
+                      }} />
+                    </div>
                   </div>
-                  <div style={{ height: 8, background: 'rgba(255, 255, 255, 0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${pct}%`,
-                      background: place.includes('주거') ? '#ef4444' : place.includes('산업') ? '#f97316' : place.includes('생활') ? '#eab308' : '#38bdf8',
-                      borderRadius: 4
-                    }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         </div>
       )}
