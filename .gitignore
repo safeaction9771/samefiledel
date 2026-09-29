@@ -20,3 +20,6 @@ dist
 *test_*.txt
 *parsed_fires.json
 src/data/fire_records.db
+
+.vercel
+.env*
