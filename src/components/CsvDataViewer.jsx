@@ -552,91 +552,108 @@ const CsvDataViewer = ({ onSelectIncident }) => {
 
             {filteredRecords.length > 0 && (
               <div style={{
-                padding: '16px 14px',
+                padding: '14px 12px',
                 textAlign: 'center',
                 borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                background: 'rgba(30, 41, 59, 0.6)'
+                background: 'rgba(15, 23, 42, 0.95)',
+                width: '100%',
+                boxSizing: 'border-box'
               }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginBottom: 12 }}>
-                  현재 <strong style={{ color: '#10b981', fontSize: '0.86rem' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 검색 결과 총 <strong style={{ color: '#f8fafc', fontSize: '0.86rem' }}>{filteredRecords.length.toLocaleString()}건</strong>
+                <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginBottom: 10 }}>
+                  현재 <strong style={{ color: '#10b981', fontSize: '0.86rem' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 총 <strong style={{ color: '#f8fafc', fontSize: '0.86rem' }}>{filteredRecords.length.toLocaleString()}건</strong>
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
                   {filteredRecords.length > displayCount && (
-                    <>
-                      <button
-                        onClick={() => setDisplayCount(prev => prev + 20)}
-                        style={{
-                          background: '#10b981',
-                          color: '#0f172a',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '8px 18px',
-                          fontSize: '0.8rem',
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6
-                        }}
-                      >
-                        이전 일자 화재 더보기 (+20건)
-                      </button>
-
-                      <button
-                        onClick={() => setDisplayCount(prev => prev + 100)}
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          color: '#f8fafc',
-                          border: '1px solid rgba(255, 255, 255, 0.15)',
-                          borderRadius: 8,
-                          padding: '8px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        +100건
-                      </button>
-
-                      <button
-                        onClick={() => setDisplayCount(filteredRecords.length)}
-                        style={{
-                          background: 'rgba(56, 189, 248, 0.15)',
-                          color: '#38bdf8',
-                          border: '1px solid rgba(56, 189, 248, 0.3)',
-                          borderRadius: 8,
-                          padding: '8px 14px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        전체 보기 ({filteredRecords.length.toLocaleString()}건)
-                      </button>
-                    </>
+                    <button
+                      onClick={() => setDisplayCount(prev => prev + 20)}
+                      style={{
+                        width: '100%',
+                        background: '#10b981',
+                        color: '#0f172a',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                        fontSize: '0.84rem',
+                        fontWeight: 900,
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <Flame size={15} />
+                      <span>이전 일자 화재 더보기 (+20건)</span>
+                    </button>
                   )}
 
-                  <button
-                    onClick={handleDownloadCsv}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.06)',
-                      color: '#cbd5e1',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: 8,
-                      padding: '8px 14px',
-                      fontSize: '0.8rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6
-                    }}
-                  >
-                    <Download size={14} />
-                    CSV 다운로드
-                  </button>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: filteredRecords.length > displayCount ? 'repeat(3, 1fr)' : '1fr',
+                    gap: 6,
+                    width: '100%'
+                  }}>
+                    {filteredRecords.length > displayCount && (
+                      <>
+                        <button
+                          onClick={() => setDisplayCount(prev => prev + 100)}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            color: '#f8fafc',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            borderRadius: 8,
+                            padding: '8px 4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          +100건
+                        </button>
+
+                        <button
+                          onClick={() => setDisplayCount(filteredRecords.length)}
+                          style={{
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            color: '#38bdf8',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            borderRadius: 8,
+                            padding: '8px 4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          전체 보기
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      onClick={handleDownloadCsv}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: '#cbd5e1',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: 8,
+                        padding: '8px 4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4
+                      }}
+                    >
+                      <Download size={13} />
+                      <span>CSV 저장</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
