@@ -33,11 +33,11 @@ const CsvDataViewer = ({ onSelectIncident }) => {
   const [selectedCause, setSelectedCause] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('RECORDS'); // 'RECORDS' | 'CAUSE_STATS' | 'PLACE_STATS' | 'INFO'
-  const [displayCount, setDisplayCount] = useState(100);
+  const [displayCount, setDisplayCount] = useState(20);
 
   // 필터 변경 시 표시 건수 초기화
   React.useEffect(() => {
-    setDisplayCount(100);
+    setDisplayCount(20);
   }, [selectedYear, selectedSido, selectedCause, searchTerm]);
 
   const stats = NFA_CSV_STATS || {};
@@ -550,27 +550,94 @@ const CsvDataViewer = ({ onSelectIncident }) => {
               </table>
             </div>
 
-            {filteredRecords.length > displayCount && (
-              <div style={{ padding: '14px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(30, 41, 59, 0.4)' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.74rem', marginBottom: 8 }}>
-                  현재 <strong style={{ color: '#10b981' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 검색 결과 총 <strong style={{ color: '#f8fafc' }}>{filteredRecords.length.toLocaleString()}건</strong>
+            {filteredRecords.length > 0 && (
+              <div style={{
+                padding: '16px 14px',
+                textAlign: 'center',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(30, 41, 59, 0.6)'
+              }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginBottom: 12 }}>
+                  현재 <strong style={{ color: '#10b981', fontSize: '0.86rem' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 검색 결과 총 <strong style={{ color: '#f8fafc', fontSize: '0.86rem' }}>{filteredRecords.length.toLocaleString()}건</strong>
                 </div>
-                <button
-                  onClick={() => setDisplayCount(prev => prev + 100)}
-                  style={{
-                    background: '#10b981',
-                    color: '#0f172a',
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '8px 22px',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
-                  }}
-                >
-                  이전 일자 화재 더보기 (+100건)
-                </button>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  {filteredRecords.length > displayCount && (
+                    <>
+                      <button
+                        onClick={() => setDisplayCount(prev => prev + 20)}
+                        style={{
+                          background: '#10b981',
+                          color: '#0f172a',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 18px',
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
+                        }}
+                      >
+                        이전 일자 화재 더보기 (+20건)
+                      </button>
+
+                      <button
+                        onClick={() => setDisplayCount(prev => prev + 100)}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.08)',
+                          color: '#f8fafc',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: 8,
+                          padding: '8px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        +100건
+                      </button>
+
+                      <button
+                        onClick={() => setDisplayCount(filteredRecords.length)}
+                        style={{
+                          background: 'rgba(56, 189, 248, 0.15)',
+                          color: '#38bdf8',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: 8,
+                          padding: '8px 14px',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        전체 보기 ({filteredRecords.length.toLocaleString()}건)
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    onClick={handleDownloadCsv}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: '#cbd5e1',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: 8,
+                      padding: '8px 14px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    <Download size={14} />
+                    CSV 다운로드
+                  </button>
+                </div>
               </div>
             )}
           </div>
