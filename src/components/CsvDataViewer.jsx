@@ -47,7 +47,47 @@ const CsvDataViewer = ({ onSelectIncident }) => {
   const currentYearKey = selectedYear.replace('년', '').replace(' (5개년)', '');
   const isAllYears = selectedYear === '전체 (5개년)';
 
-  // 연도 및 시도 선택에 따른 통계 계산
+  // 1. 레코드 필터링 (가장 먼저 선언)
+  const filteredRecords = useMemo(() => {
+    let list = incidents;
+
+    if (!isAllYears) {
+      list = list.filter(item => (item.occurDate || '').startsWith(currentYearKey));
+    }
+
+    if (selectedSido !== '전체') {
+      list = list.filter(item => 
+        (item.region && item.region.includes(selectedSido)) || 
+        (item.occurPlace && item.occurPlace.includes(selectedSido))
+      );
+    }
+
+    if (selectedCause !== '전체') {
+      list = list.filter(item => item.fireCause === selectedCause || item.cause === selectedCause);
+    }
+
+    const term = searchTerm.trim().toLowerCase();
+    if (term) {
+      list = list.filter(item => 
+        (item.occurPlace || '').toLowerCase().includes(term) ||
+        (item.title || '').toLowerCase().includes(term) ||
+        (item.placeCategory || '').toLowerCase().includes(term) ||
+        (item.fireCause || '').toLowerCase().includes(term) ||
+        (item.jurisStation || '').toLowerCase().includes(term) ||
+        (item.occurDate || '').includes(term)
+      );
+    }
+
+    return list;
+  }, [incidents, isAllYears, currentYearKey, selectedSido, selectedCause, searchTerm]);
+
+  // 2. 원인 목록 추출
+  const causeOptions = useMemo(() => {
+    const causes = stats.by_cause ? Object.keys(stats.by_cause) : [];
+    return ['전체', ...causes];
+  }, [stats]);
+
+  // 3. 연도 및 시도 선택에 따른 통계 계산
   const currentStats = useMemo(() => {
     // 1. 전국 (전체) 선택 시: 전수 데이터 원본에서 직접 로드
     if (selectedSido === '전체') {
@@ -99,7 +139,7 @@ const CsvDataViewer = ({ onSelectIncident }) => {
     let injurySum = 0;
     let damageThousandSum = 0;
 
-    filteredRecords.forEach(r => {
+    (filteredRecords || []).forEach(r => {
       const c = r.fireCause || r.cause || '기타';
       causeAgg[c] = (causeAgg[c] || 0) + 1;
 
@@ -111,7 +151,7 @@ const CsvDataViewer = ({ onSelectIncident }) => {
       damageThousandSum += Number(r.damageAmount) || 0;
     });
 
-    const displayCountVal = totalSidoCount > 0 ? totalSidoCount : filteredRecords.length;
+    const displayCountVal = totalSidoCount > 0 ? totalSidoCount : (filteredRecords ? filteredRecords.length : 0);
     const estDamageEok = isAllYears
       ? Math.round((displayCountVal / (stats.total_count || 191510)) * (stats.total_damage_eok || 46469.3) * 10) / 10
       : Math.round((damageThousandSum / 100000) * 10) / 10;
@@ -126,46 +166,6 @@ const CsvDataViewer = ({ onSelectIncident }) => {
       place_counts: Object.keys(placeAgg).length > 0 ? placeAgg : (stats.by_place || {})
     };
   }, [selectedYear, selectedSido, isAllYears, currentYearKey, stats, filteredRecords]);
-
-  // 원인 목록 추출
-  const causeOptions = useMemo(() => {
-    const causes = stats.by_cause ? Object.keys(stats.by_cause) : [];
-    return ['전체', ...causes];
-  }, [stats]);
-
-  // 레코드 필터링
-  const filteredRecords = useMemo(() => {
-    let list = incidents;
-
-    if (!isAllYears) {
-      list = list.filter(item => (item.occurDate || '').startsWith(currentYearKey));
-    }
-
-    if (selectedSido !== '전체') {
-      list = list.filter(item => 
-        (item.region && item.region.includes(selectedSido)) || 
-        (item.occurPlace && item.occurPlace.includes(selectedSido))
-      );
-    }
-
-    if (selectedCause !== '전체') {
-      list = list.filter(item => item.fireCause === selectedCause || item.cause === selectedCause);
-    }
-
-    const term = searchTerm.trim().toLowerCase();
-    if (term) {
-      list = list.filter(item => 
-        (item.occurPlace || '').toLowerCase().includes(term) ||
-        (item.title || '').toLowerCase().includes(term) ||
-        (item.placeCategory || '').toLowerCase().includes(term) ||
-        (item.fireCause || '').toLowerCase().includes(term) ||
-        (item.jurisStation || '').toLowerCase().includes(term) ||
-        (item.occurDate || '').includes(term)
-      );
-    }
-
-    return list;
-  }, [incidents, isAllYears, currentYearKey, selectedSido, selectedCause, searchTerm]);
 
   // CSV 다운로드 트리거
   const handleDownloadCsv = () => {

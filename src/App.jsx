@@ -10,6 +10,7 @@ import RegionalAnalysis from './components/RegionalAnalysis';
 import ApiKeyModal from './components/ApiKeyModal';
 import AdminPinModal from './components/AdminPinModal';
 import FireDetailModal from './components/FireDetailModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { getStoredApiKey, saveApiKey, fetchFireOccurrences } from './services/fireApi';
 
 // 일반 모바일 모드 6개 내비게이션 탭 (실시간 지도, 발생 정보, CSV 원본, 화재 통계, 지역 분석, 유튜브 뉴스)
@@ -148,27 +149,31 @@ function App() {
             </div>
 
             <div className="pc-data-content-scroll">
-              {pcRightTab === 'OCCUR_LIST' && (
-                <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />
-              )}
-              {pcRightTab === 'CSV_DATA' && (
-                <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />
-              )}
-              {pcRightTab === 'STATS' && <StatsDashboard />}
-              {pcRightTab === 'REGION' && <RegionalAnalysis />}
-              {pcRightTab === 'YOUTUBE' && <YouTubeFireNews />}
+              <ErrorBoundary>
+                {pcRightTab === 'OCCUR_LIST' && (
+                  <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />
+                )}
+                {pcRightTab === 'CSV_DATA' && (
+                  <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />
+                )}
+                {pcRightTab === 'STATS' && <StatsDashboard />}
+                {pcRightTab === 'REGION' && <RegionalAnalysis />}
+                {pcRightTab === 'YOUTUBE' && <YouTubeFireNews />}
+              </ErrorBoundary>
             </div>
           </section>
         </main>
       ) : (
         /* 📱 모바일 세로 뷰일 때: 6개 탭 화면 (실시간 지도, 발생 정보, CSV 원본, 통계, 지역분석, 유튜브 뉴스) */
         <main className="app-content">
-          {activeTab === 'MAP' && <FireMap onSelectIncident={(inc) => setSelectedIncident(inc)} />}
-          {activeTab === 'OCCUR_LIST' && <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />}
-          {activeTab === 'CSV_DATA' && <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />}
-          {activeTab === 'STATS' && <StatsDashboard />}
-          {activeTab === 'REGION' && <RegionalAnalysis />}
-          {activeTab === 'YOUTUBE' && <YouTubeFireNews />}
+          <ErrorBoundary>
+            {activeTab === 'MAP' && <FireMap onSelectIncident={(inc) => setSelectedIncident(inc)} />}
+            {activeTab === 'OCCUR_LIST' && <FireOccurList onSelectIncident={(inc) => setSelectedIncident(inc)} />}
+            {activeTab === 'CSV_DATA' && <CsvDataViewer onSelectIncident={(inc) => setSelectedIncident(inc)} />}
+            {activeTab === 'STATS' && <StatsDashboard />}
+            {activeTab === 'REGION' && <RegionalAnalysis />}
+            {activeTab === 'YOUTUBE' && <YouTubeFireNews />}
+          </ErrorBoundary>
         </main>
       )}
 
