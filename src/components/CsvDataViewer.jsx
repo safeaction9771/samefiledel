@@ -33,7 +33,12 @@ const CsvDataViewer = ({ onSelectIncident }) => {
   const [selectedCause, setSelectedCause] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('RECORDS'); // 'RECORDS' | 'CAUSE_STATS' | 'PLACE_STATS' | 'INFO'
-  const [displayCount, setDisplayCount] = useState(50);
+  const [displayCount, setDisplayCount] = useState(100);
+
+  // 필터 변경 시 표시 건수 초기화
+  React.useEffect(() => {
+    setDisplayCount(100);
+  }, [selectedYear, selectedSido, selectedCause, searchTerm]);
 
   const stats = NFA_CSV_STATS || {};
   const incidents = NFA_CSV_INCIDENTS || [];
@@ -489,21 +494,25 @@ const CsvDataViewer = ({ onSelectIncident }) => {
             </div>
 
             {filteredRecords.length > displayCount && (
-              <div style={{ padding: '12px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <div style={{ padding: '14px', textAlign: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', background: 'rgba(30, 41, 59, 0.4)' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.74rem', marginBottom: 8 }}>
+                  현재 <strong style={{ color: '#10b981' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 검색 결과 총 <strong style={{ color: '#f8fafc' }}>{filteredRecords.length.toLocaleString()}건</strong>
+                </div>
                 <button
-                  onClick={() => setDisplayCount(prev => prev + 50)}
+                  onClick={() => setDisplayCount(prev => prev + 100)}
                   style={{
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    color: '#10b981',
-                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                    background: '#10b981',
+                    color: '#0f172a',
+                    border: 'none',
                     borderRadius: 8,
-                    padding: '6px 18px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
+                    padding: '8px 22px',
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
                   }}
                 >
-                  더보기 (+50건) (현재 {Math.min(displayCount, filteredRecords.length)} / {filteredRecords.length.toLocaleString()}건)
+                  이전 일자 화재 더보기 (+100건)
                 </button>
               </div>
             )}

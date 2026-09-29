@@ -50,22 +50,20 @@ df['dt'] = pd.to_datetime(df['화재발생년원일'], errors='coerce')
 df = df.dropna(subset=['dt'])
 df = df.sort_values(by='dt', ascending=False).reset_index(drop=True)
 
-# Select 5,000 cases:
-# 1. All death cases
-fatal_cases = df[df['사망'] > 0]
-# 2. Major injury cases
-injury_cases = df[(df['사망'] == 0) & (df['부상'] >= 2)]
-# 3. High property damage cases (> 5억원)
-large_dmg = df[df['재산피해소계'] >= 500000]
-# 4. Recent 2024 diverse cases across all regions
-recent_2024 = df[df['dt'] >= '2024-01-01'].iloc[::15]
-# 5. Background temporal sample
-bg_sample = df.iloc[::60]
+# Select balanced cases across all 5 years (2020~2024)
+sampled_by_year = []
+for year in [2024, 2023, 2022, 2021, 2020]:
+    ydf = df[df['dt'].dt.year == year]
+    # Fatalities & major injuries
+    fatals = ydf[ydf['사망'] > 0]
+    injuries = ydf[(ydf['사망'] == 0) & (ydf['부상'] >= 1)]
+    large_dmg = ydf[ydf['재산피해소계'] >= 300000]
+    regular = ydf.iloc[::30]
+    y_combined = pd.concat([fatals, injuries, large_dmg, regular]).drop_duplicates(subset=['화재발생년원일', '시도', '시군구', '발화요인소분류'])
+    sampled_by_year.append(y_combined.head(1200))
 
-combined = pd.concat([fatal_cases, injury_cases, large_dmg, recent_2024, bg_sample])
-selected_df = combined.drop_duplicates(subset=['화재발생년원일', '시도', '시군구', '발화요인소분류']).sort_values(by='dt', ascending=False).head(5000).reset_index(drop=True)
-
-print(f"Final selected {len(selected_df):,} incidents.")
+selected_df = pd.concat(sampled_by_year).sort_values(by='dt', ascending=False).reset_index(drop=True)
+print(f"Final selected {len(selected_df):,} incidents across 2020~2024.")
 
 incidents_list = []
 for idx, row in selected_df.iterrows():
