@@ -390,18 +390,14 @@ const matchSido = (itemRegion = '', targetRegion = '') => {
     { id: 'TODAY', label: '당일 (오늘)' },
     { id: '7DAYS', label: '최근 7일' },
     { id: '1MONTH', label: '최근 1개월 (100핀)' },
-    { id: '3MONTHS', label: '최근 3개월 (200핀)' },
-    { id: '6MONTHS', label: '최근 6개월 (300핀)' },
     { id: '1YEAR', label: '최근 1년 (400핀)' },
-    { id: '3YEARS', label: '최근 3년 (500핀)' },
-    { id: '5YEARS', label: '최근 5년 (600핀)' },
     { id: '10YEARS', label: '최근 10년 (700핀)' },
     { id: '20YEARS', label: '최근 20년 (800핀)' },
     { id: 'ALL', label: '전체 기록 (800핀)' },
     { id: 'CUSTOM', label: '📅 날짜 직접 선택' }
   ];
 
-  // 기간별 단계적 마커 표출 (1개월: 100건, 3개월: 200건, 6개월: 300건, 1년: 400건, 3년: 500건, 5년: 600건, 10년: 700건, 20년/전체: 800건)
+  // 기간별 단계적 마커 표출 (1개월: 100건, 1년: 400건, 10년: 700건, 20년/전체: 800건)
   const displayMarkers = useMemo(() => {
     if (periodFilter === 'TODAY' || periodFilter === '3DAYS' || periodFilter === '7DAYS' || periodFilter === 'CUSTOM') {
       return filteredIncidents;
@@ -409,11 +405,7 @@ const matchSido = (itemRegion = '', targetRegion = '') => {
 
     let targetCount = 100;
     if (periodFilter === '1MONTH') targetCount = 100;
-    else if (periodFilter === '3MONTHS') targetCount = 200;
-    else if (periodFilter === '6MONTHS') targetCount = 300;
     else if (periodFilter === '1YEAR') targetCount = 400;
-    else if (periodFilter === '3YEARS') targetCount = 500;
-    else if (periodFilter === '5YEARS') targetCount = 600;
     else if (periodFilter === '10YEARS') targetCount = 700;
     else if (periodFilter === '20YEARS' || periodFilter === 'ALL') targetCount = 800;
 

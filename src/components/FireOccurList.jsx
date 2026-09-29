@@ -267,11 +267,7 @@ const FireOccurList = ({ onSelectIncident }) => {
   }, [filteredList, periodFilter, selectedRegion, searchTerm]);
 
   useEffect(() => {
-    if (periodFilter === '3MONTHS') setDisplayLimit(100);
-    else if (periodFilter === '6MONTHS') setDisplayLimit(150);
-    else if (periodFilter === '1YEAR') setDisplayLimit(200);
-    else if (periodFilter === '3YEARS') setDisplayLimit(300);
-    else if (periodFilter === '5YEARS') setDisplayLimit(400);
+    if (periodFilter === '1YEAR') setDisplayLimit(200);
     else if (periodFilter === '10YEARS' || periodFilter === '20YEARS') setDisplayLimit(500);
     else if (periodFilter === 'ALL') setDisplayLimit(500);
     else setDisplayLimit(50);
@@ -283,11 +279,7 @@ const FireOccurList = ({ onSelectIncident }) => {
     { id: 'TODAY', label: '당일 (오늘)' },
     { id: '7DAYS', label: '최근 7일' },
     { id: '1MONTH', label: '최근 1개월' },
-    { id: '3MONTHS', label: '최근 3개월' },
-    { id: '6MONTHS', label: '최근 6개월' },
     { id: '1YEAR', label: '최근 1년' },
-    { id: '3YEARS', label: '최근 3년' },
-    { id: '5YEARS', label: '최근 5년' },
     { id: '10YEARS', label: '최근 10년' },
     { id: '20YEARS', label: '최근 20년' },
     { id: 'ALL', label: '전체 공식 기록' },

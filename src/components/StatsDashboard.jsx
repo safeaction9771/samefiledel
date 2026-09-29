@@ -360,10 +360,7 @@ const StatsDashboard = ({ stats }) => {
         >
           {[
             { id: '1MONTH', label: '1개월' },
-            { id: '6MONTHS', label: '6개월' },
             { id: '1YEAR', label: '1년 (2024 팩트)' },
-            { id: '3YEARS', label: '3년 누계' },
-            { id: '5YEARS', label: '5년 전수 (19.1만건)' },
             { id: '10YEARS', label: '10년 누계 팩트' },
             { id: '20YEARS', label: '20년 누계 팩트' }
           ].map((tab) => (

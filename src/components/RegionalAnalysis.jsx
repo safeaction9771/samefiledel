@@ -169,8 +169,6 @@ const RegionalAnalysis = ({ regionStats, onSelectRegion }) => {
           {[
             { id: '1MONTH', label: '1개월' },
             { id: '1YEAR', label: '1년 (2024 팩트)' },
-            { id: '3YEARS', label: '3년 누적' },
-            { id: '5YEARS', label: '5년 전수 (19.1만건)' },
             { id: '10YEARS', label: '10년 누적' },
             { id: '20YEARS', label: '20년 누적' }
           ].map((t) => (
