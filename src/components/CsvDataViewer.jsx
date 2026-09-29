@@ -474,26 +474,31 @@ const CsvDataViewer = ({ onSelectIncident }) => {
             </select>
           </div>
 
-          {/* 레코드 테이블 */}
-          <div style={{
+          {/* 레코드 테이블 카드 */}
+          <div className="csv-table-card" style={{
             background: 'rgba(15, 23, 42, 0.9)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             borderRadius: 10,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            width: '100%',
+            maxWidth: '100%',
+            minWidth: 0,
+            boxSizing: 'border-box',
+            marginBottom: 12
           }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', textAlign: 'left' }}>
+            <div className="csv-table-scroll" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%', display: 'block' }}>
+              <table style={{ minWidth: 620, width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ background: 'rgba(30, 41, 59, 0.8)', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', color: '#94a3b8' }}>
-                    <th style={{ padding: '8px 10px' }}>발생일자</th>
-                    <th style={{ padding: '8px 10px' }}>시·도</th>
-                    <th style={{ padding: '8px 10px' }}>발생장소</th>
-                    <th style={{ padding: '8px 10px' }}>장소구분</th>
-                    <th style={{ padding: '8px 10px' }}>발화원인</th>
-                    <th style={{ padding: '8px 10px' }}>인명피해</th>
-                    <th style={{ padding: '8px 10px' }}>재산피해</th>
-                    <th style={{ padding: '8px 10px' }}>관할소방서</th>
-                    <th style={{ padding: '8px 10px', textAlign: 'center' }}>상세</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>발생일자</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>시·도</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>발생장소</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>장소구분</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>발화원인</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>인명피해</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>재산피해</th>
+                    <th style={{ padding: '8px 10px', whiteSpace: 'nowrap' }}>관할소방서</th>
+                    <th style={{ padding: '8px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>상세</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -515,7 +520,7 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                       <td style={{ padding: '8px 10px', color: '#38bdf8', fontWeight: 700, whiteSpace: 'nowrap' }}>
                         {item.region || '-'}
                       </td>
-                      <td style={{ padding: '8px 10px', color: '#e2e8f0', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '8px 10px', color: '#e2e8f0', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.occurPlace || item.location || '-'}
                       </td>
                       <td style={{ padding: '8px 10px', color: '#cbd5e1', whiteSpace: 'nowrap' }}>
@@ -550,20 +555,23 @@ const CsvDataViewer = ({ onSelectIncident }) => {
               </table>
             </div>
 
+            {/* 하단 페이지네이션 & 액션 컨트롤 바 */}
             {filteredRecords.length > 0 && (
-              <div style={{
+              <div className="csv-pagination-panel" style={{
                 padding: '14px 12px',
                 textAlign: 'center',
                 borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                 background: 'rgba(15, 23, 42, 0.95)',
                 width: '100%',
+                maxWidth: '100%',
+                minWidth: 0,
                 boxSizing: 'border-box'
               }}>
                 <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginBottom: 10 }}>
                   현재 <strong style={{ color: '#10b981', fontSize: '0.86rem' }}>{Math.min(displayCount, filteredRecords.length).toLocaleString()}건</strong> 표시 중 / 총 <strong style={{ color: '#f8fafc', fontSize: '0.86rem' }}>{filteredRecords.length.toLocaleString()}건</strong>
                 </div>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
                   {filteredRecords.length > displayCount && (
                     <button
                       onClick={() => setDisplayCount(prev => prev + 20)}
@@ -573,8 +581,8 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                         color: '#0f172a',
                         border: 'none',
                         borderRadius: 8,
-                        padding: '10px 14px',
-                        fontSize: '0.84rem',
+                        padding: '11px 14px',
+                        fontSize: '0.85rem',
                         fontWeight: 900,
                         cursor: 'pointer',
                         boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
@@ -584,7 +592,7 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                         gap: 6
                       }}
                     >
-                      <Flame size={15} />
+                      <Flame size={16} />
                       <span>이전 일자 화재 더보기 (+20건)</span>
                     </button>
                   )}
@@ -593,7 +601,9 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                     display: 'grid',
                     gridTemplateColumns: filteredRecords.length > displayCount ? 'repeat(3, 1fr)' : '1fr',
                     gap: 6,
-                    width: '100%'
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box'
                   }}>
                     {filteredRecords.length > displayCount && (
                       <>
@@ -604,14 +614,15 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                             color: '#f8fafc',
                             border: '1px solid rgba(255, 255, 255, 0.15)',
                             borderRadius: 8,
-                            padding: '8px 4px',
+                            padding: '9px 4px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            textAlign: 'center'
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap'
                           }}
                         >
-                          +100건
+                          +100건 더보기
                         </button>
 
                         <button
@@ -621,11 +632,12 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                             color: '#38bdf8',
                             border: '1px solid rgba(56, 189, 248, 0.3)',
                             borderRadius: 8,
-                            padding: '8px 4px',
+                            padding: '9px 4px',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            textAlign: 'center'
+                            textAlign: 'center',
+                            whiteSpace: 'nowrap'
                           }}
                         >
                           전체 보기
@@ -640,14 +652,15 @@ const CsvDataViewer = ({ onSelectIncident }) => {
                         color: '#cbd5e1',
                         border: '1px solid rgba(255, 255, 255, 0.12)',
                         borderRadius: 8,
-                        padding: '8px 4px',
+                        padding: '9px 4px',
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 4
+                        gap: 4,
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       <Download size={13} />
