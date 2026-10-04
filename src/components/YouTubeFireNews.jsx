@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Flame,
   Search,
@@ -15,7 +15,8 @@ import {
   CalendarDays,
   Radio,
   Tv,
-  RotateCcw
+  RotateCcw,
+  RefreshCw
 } from 'lucide-react';
 import youtubeNewsData from '../data/youtube_fire_news.json';
 import { REGIONS } from '../data/officialIncidents';
@@ -52,12 +53,55 @@ const YouTubeFireNews = () => {
   const [displayLimit, setDisplayLimit] = useState(30);
   const [playingVideo, setPlayingVideo] = useState(null);
 
+  // 실시간 수신된 동적 유튜브 화재 뉴스 목록
+  const [newsList, setNewsList] = useState(youtubeNewsData || []);
+  const [isLiveRefreshing, setIsLiveRefreshing] = useState(false);
+  const [liveUpdatedTime, setLiveUpdatedTime] = useState('');
+
   // 오늘 날짜 계산 (실시간 동적)
   const now = new Date();
   const todayStr = formatKSTDate(now);
   const d90Str = getDaysAgoDate(90, now);
 
   const [customSelectedDate, setCustomSelectedDate] = useState(() => formatKSTDate(new Date()));
+
+  // 🔄 백그라운드 및 클릭 시 실시간 최신 유튜브 화재 뉴스 동기화
+  const fetchLiveYouTubeNews = async () => {
+    setIsLiveRefreshing(true);
+    try {
+      const res = await fetch('/api/youtube-news');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setNewsList(prev => {
+            const seen = new Set();
+            const merged = [];
+            [...json.data, ...prev].forEach(item => {
+              if (item.videoId && !seen.has(item.videoId)) {
+                seen.add(item.videoId);
+                merged.push(item);
+              }
+            });
+            return merged.sort((a, b) => (b.datetime || '').localeCompare(a.datetime || ''));
+          });
+          const curr = new Date();
+          const hh = String(curr.getHours()).padStart(2, '0');
+          const mm = String(curr.getMinutes()).padStart(2, '0');
+          setLiveUpdatedTime(`${hh}:${mm} 실시간 동기화 완료`);
+        }
+      }
+    } catch (err) {
+      console.warn('YouTube live news fetch notice:', err);
+    } finally {
+      setIsLiveRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveYouTubeNews();
+    const timer = setInterval(fetchLiveYouTubeNews, 60000); // 1분 주기 자동 새로고침
+    return () => clearInterval(timer);
+  }, []);
 
   // 기간 필터링 계산 (최근 3개월 이내 데이터만 엄격하게 필터링)
   const filteredNews = useMemo(() => {
@@ -79,7 +123,7 @@ const YouTubeFireNews = () => {
     d90.setDate(d90.getDate() - 89);
     const min3MonthStr = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`;
 
-    return (youtubeNewsData || []).filter((item) => {
+    return (newsList || []).filter((item) => {
       const title = item.title || '';
 
       // 🔒 [필수 정책] 엄격한 화재/소방 전문 판별 엔진 (단순 '진화', '폭발', '불' 비유어 100% 원천 차단)
@@ -176,7 +220,7 @@ const YouTubeFireNews = () => {
 
       return true;
     });
-  }, [periodFilter, selectedRegion, selectedBroadcaster, searchTerm, customSelectedDate, todayStr]);
+  }, [periodFilter, selectedRegion, selectedBroadcaster, searchTerm, customSelectedDate, todayStr, newsList]);
 
   const visibleCards = filteredNews.slice(0, displayLimit);
 
@@ -220,22 +264,29 @@ const YouTubeFireNews = () => {
               </p>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <span
+          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <button
+              onClick={fetchLiveYouTubeNews}
+              disabled={isLiveRefreshing}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 4,
-                background: 'rgba(239, 68, 68, 0.2)',
+                gap: 5,
+                background: 'rgba(239, 68, 68, 0.25)',
                 border: '1px solid #ef4444',
-                color: '#f87171',
-                padding: '3px 8px',
+                color: '#fca5a5',
+                padding: '4px 10px',
                 borderRadius: 20,
-                fontSize: '0.68rem',
-                fontWeight: 700
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer'
               }}
             >
-              <Radio size={11} className="animate-pulse" /> 라이브 연동
+              <RefreshCw size={12} className={isLiveRefreshing ? 'animate-spin' : ''} />
+              <span>{isLiveRefreshing ? '새로고침 중...' : (liveUpdatedTime || '실시간 새로고침')}</span>
+            </button>
+            <span style={{ fontSize: '0.66rem', color: '#94a3b8' }}>
+              ● 24시간 실시간 연동
             </span>
           </div>
         </div>
@@ -442,28 +493,57 @@ const YouTubeFireNews = () => {
               선택하신 조건의 유튜브 화재 뉴스가 없습니다
             </h4>
             <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.6, maxWidth: 360, margin: '0 auto 14px auto' }}>
-              기간 또는 지역 필터를 변경하시거나 '전체 기간'으로 조회해보세요.
+              선택하신 기간({PERIOD_OPTIONS.find(p => p.id === periodFilter)?.label}) 또는 지역에 신규 방송된 영상이 없습니다.<br />
+              전체 기간(최근 3개월)으로 조회하시거나 실시간 새로고침을 진행해 보세요.
             </p>
-            <button
-              onClick={() => {
-                setPeriodFilter('7DAYS');
-                setSelectedRegion('전국 (전체)');
-                setSelectedBroadcaster('전체 방송사');
-                setSearchTerm('');
-              }}
-              style={{
-                background: 'rgba(239, 68, 68, 0.2)',
-                border: '1px solid #ef4444',
-                color: '#f87171',
-                padding: '6px 14px',
-                borderRadius: 8,
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              🔄 최근 7일 전체 뉴스 보기
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  setPeriodFilter('3MONTHS');
+                  setSelectedRegion('전국 (전체)');
+                  setSelectedBroadcaster('전체 방송사');
+                  setSearchTerm('');
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '9px 16px',
+                  borderRadius: 8,
+                  fontSize: '0.8rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+                }}
+              >
+                <RotateCcw size={14} />
+                최근 3개월 전체 화재 뉴스 보기 ({newsList.length}건)
+              </button>
+
+              <button
+                onClick={fetchLiveYouTubeNews}
+                disabled={isLiveRefreshing}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#f8fafc',
+                  padding: '9px 14px',
+                  borderRadius: 8,
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <RefreshCw size={14} className={isLiveRefreshing ? 'animate-spin' : ''} />
+                {isLiveRefreshing ? '실시간 갱신 중...' : '유튜브 실시간 새로고침'}
+              </button>
+            </div>
           </div>
         ) : (
           visibleCards.map((item, idx) => (

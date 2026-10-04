@@ -62,7 +62,7 @@ def extract_status(text):
     return '상황 수습'
 
 def parse_published_to_datetime(pub_text, title_text=""):
-    now = datetime(2026, 9, 19, 10, 20)
+    now = datetime.now()
     
     # 1. Check title for explicit date like 2026.09.18 or 2026-09-18
     m_title_date = re.search(r'(202[0-9])[\.\-/]\s*([0-1]?[0-9])[\.\-/]\s*([0-3]?[0-9])', title_text)
@@ -248,7 +248,10 @@ def main():
         'KBS 뉴스': 'UCcQTRi69dsVYHN3exePtZ1A',
         'SBS 뉴스': 'UCkinYTS9IHqOEwR1Sze2JTw',
         '연합뉴스TV': 'UCTHCOPwqNfZ0uiKOvFyhGwg',
-        'MBN 뉴스': 'UCG9aFJTZ-lMCHAiO1KJsirg'
+        'MBN 뉴스': 'UCG9aFJTZ-lMCHAiO1KJsirg',
+        'MBC 뉴스': 'UCF4Wxdo3inmxP-YJCkqUfZQ',
+        'JTBC 뉴스': 'UCsU-I-vHLiaMfV_ceaYz5rQ',
+        '채널A 뉴스': 'UCfq4V1DAuaojnr2ryvWNysw'
     }
     for cname, cid in rss_channels.items():
         all_raw_items.extend(fetch_channel_rss(cname, cid))
@@ -273,7 +276,14 @@ def main():
         '경남 화재 뉴스',
         '제주 화재 뉴스',
         '산불 진화 소방',
-        '전기차 화재 진압'
+        '전기차 화재 진압',
+        'YTN 화재',
+        'KBS 화재',
+        'SBS 화재',
+        'MBC 화재',
+        '연합뉴스 화재',
+        '오늘 화재 뉴스',
+        '어제 화재 뉴스'
     ]
     for q in queries:
         all_raw_items.extend(search_youtube_query(q))
@@ -281,8 +291,9 @@ def main():
     seen_vids = set()
     processed_news = []
     
-    # 최근 3개월 (90일) 컷오프 기준일자 (2026-06-21)
-    cutoff_dt = datetime(2026, 9, 19, 10, 20) - timedelta(days=90)
+    # 최근 3개월 (90일) 컷오프 기준일자
+    now_dt = datetime.now()
+    cutoff_dt = now_dt - timedelta(days=90)
     cutoff_str = cutoff_dt.strftime('%Y-%m-%d')
     print(f"[*] 3개월 컷오프 기준일: {cutoff_str} 이후 영상만 수집")
     
