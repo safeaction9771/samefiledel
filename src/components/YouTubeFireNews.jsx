@@ -108,19 +108,19 @@ const YouTubeFireNews = () => {
     const baseDate = new Date();
 
     const d3 = new Date(baseDate);
-    d3.setDate(d3.getDate() - 2);
+    d3.setDate(d3.getDate() - 3);
     const d3Str = `${d3.getFullYear()}-${String(d3.getMonth() + 1).padStart(2, '0')}-${String(d3.getDate()).padStart(2, '0')}`;
 
     const d7 = new Date(baseDate);
-    d7.setDate(d7.getDate() - 6);
+    d7.setDate(d7.getDate() - 7);
     const d7Str = `${d7.getFullYear()}-${String(d7.getMonth() + 1).padStart(2, '0')}-${String(d7.getDate()).padStart(2, '0')}`;
 
     const d30 = new Date(baseDate);
-    d30.setDate(d30.getDate() - 29);
+    d30.setDate(d30.getDate() - 30);
     const d30Str = `${d30.getFullYear()}-${String(d30.getMonth() + 1).padStart(2, '0')}-${String(d30.getDate()).padStart(2, '0')}`;
 
     const d90 = new Date(baseDate);
-    d90.setDate(d90.getDate() - 89);
+    d90.setDate(d90.getDate() - 90);
     const min3MonthStr = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`;
 
     return (newsList || []).filter((item) => {
